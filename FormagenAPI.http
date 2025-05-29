@@ -1,0 +1,6 @@
+@FormagenAPI_HostAddress = http://localhost:5081
+
+GET {{FormagenAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
