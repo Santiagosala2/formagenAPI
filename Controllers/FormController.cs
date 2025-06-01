@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
+using DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Services;
@@ -6,7 +8,7 @@ using Services;
 namespace FormagenAPI.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class FormController : ControllerBase
 {
     private readonly FormsService _formsService;
@@ -16,24 +18,31 @@ public class FormController : ControllerBase
         _formsService = formsService;
     }
 
+    public record ErrorMessage(string message, HttpStatusCode statusCode);
+
 
     [HttpPost]
-    public async Task<IActionResult> Post(FormRequest formRequest)
+    public async Task<IActionResult> CreateForm(CreateFormRequest formRequest)
     {
-        Form form = new Form()
+        // Verify that the form name is unique
+        bool formNameIsUnique = await _formsService.CheckFormExistsByNameAsync(formRequest.Name);
+
+        if (!formNameIsUnique)
+        {
+            return BadRequest(new ErrorMessage("Form name is not unique", HttpStatusCode.BadRequest));
+        }
+
+        Form form = new()
         {
             Id = Guid.NewGuid().ToString(),
             Name = formRequest.Name,
-            Title = formRequest.Title,
-            Description = formRequest.Description,
-            Questions = formRequest.Questions
+            Created = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow
         };
-
-
 
         await _formsService.CreateAsync(form);
 
-        FormResponse formResponse = new FormResponse()
+        CreateFormResponse formResponse = new()
         {
             Id = form.Id,
             Name = form.Name
@@ -41,5 +50,40 @@ public class FormController : ControllerBase
 
         return Ok(formResponse);
     }
+
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetForm(string id)
+    {
+        var form = await _formsService.GetFormByIdAsync(id);
+
+        if (form == null)
+        {
+            return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
+        }
+
+        return Ok(form);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteForm(string id)
+    {
+        var form = await _formsService.GetFormByIdAsync(id);
+
+        if (form == null)
+        {
+            return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
+        }
+
+        var response = await _formsService.DeleteFormByIdAsync(id);
+
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            return BadRequest(new ErrorMessage("Something went wrong", HttpStatusCode.BadRequest));
+        }
+        return Ok();
+
+    }
+
 
 }
