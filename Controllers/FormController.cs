@@ -20,6 +20,13 @@ public class FormController : ControllerBase
 
     public record ErrorMessage(string message, HttpStatusCode statusCode);
 
+    [HttpGet]
+    public async Task<IActionResult> GetForms()
+    {
+        var forms = await _formsService.GetFormsAsync();
+
+        return Ok(forms);
+    }
 
     [HttpPost]
     public async Task<IActionResult> CreateForm(CreateFormRequest formRequest)
@@ -51,7 +58,6 @@ public class FormController : ControllerBase
         return Ok(formResponse);
     }
 
-
     [HttpGet("{id}")]
     public async Task<IActionResult> GetForm(string id)
     {
@@ -65,6 +71,10 @@ public class FormController : ControllerBase
         return Ok(form);
     }
 
+
+
+
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteForm(string id)
     {
@@ -75,12 +85,15 @@ public class FormController : ControllerBase
             return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
         }
 
-        var response = await _formsService.DeleteFormByIdAsync(id);
-
-        if (response.StatusCode != HttpStatusCode.OK)
+        try
+        {
+            var response = await _formsService.DeleteFormByIdAsync(id);
+        }
+        catch (System.Exception)
         {
             return BadRequest(new ErrorMessage("Something went wrong", HttpStatusCode.BadRequest));
         }
+
         return Ok();
 
     }

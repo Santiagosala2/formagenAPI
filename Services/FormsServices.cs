@@ -66,6 +66,31 @@ public class FormsService
         return response.FirstOrDefault();
     }
 
+    public async Task<List<Form>> GetFormsAsync()
+    {
+        string formByIdQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName}";
+
+        var query = new QueryDefinition(formByIdQuery);
+
+        using FeedIterator<Form> feed = _formsContainer.GetItemQueryIterator<Form>(
+           queryDefinition: query
+        );
+
+        List<Form> items = new();
+        while (feed.HasMoreResults)
+        {
+            FeedResponse<Form> response = await feed.ReadNextAsync();
+            foreach (Form item in response)
+            {
+                items.Add(item);
+            }
+        }
+
+        return items;
+
+
+    }
+
     public async Task<ItemResponse<Form>> DeleteFormByIdAsync(string id)
     {
         var item = await _formsContainer.DeleteItemAsync<ItemResponse<Form>>(id, new PartitionKey(id));
