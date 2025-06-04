@@ -97,6 +97,25 @@ public class FormsService
         return item;
     }
 
+    public async Task<ItemResponse<Form>> UpdateFormAsync(Form form, DateTime created)
+    {
+
+        //     ItemResponse<Form> response = await _formsContainer.PatchItemAsync<Form>(
+        //         id: form.Id,
+        //         partitionKey: new PartitionKey(form.Id),
+        //         patchOperations: new[] {
+        //             PatchOperation.Add("/name", form.Name),
+        //             PatchOperation.Add("/title", form.Title),
+        //             PatchOperation.Add("/description", form.Description),
+        //             PatchOperation.Add("/questions", form.Questions),
+        //             PatchOperation.Add("/lastUpdated", form.LastUpdated)
+        //         }
+        // );
+        form.Created = created;
+        ItemResponse<Form> item = await _formsContainer.UpsertItemAsync<Form>(form, new PartitionKey(form.Id));
+        return item;
+    }
+
 
 
 }

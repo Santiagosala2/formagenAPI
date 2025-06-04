@@ -71,7 +71,42 @@ public class FormController : ControllerBase
         return Ok(form);
     }
 
+    [HttpPost("{id}")]
+    public async Task<IActionResult> UpdateForm(UpdateFormRequest formRequest)
+    {
+        var form = await _formsService.GetFormByIdAsync(formRequest.Id);
 
+        if (form == null)
+        {
+            return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
+        }
+
+        try
+        {
+            Form updatedForm = new()
+            {
+                Id = formRequest.Id,
+                Name = formRequest.Name,
+                Title = formRequest.Title,
+                Description = formRequest.Description,
+                Questions = formRequest.Questions,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            var response = await _formsService.UpdateFormAsync(updatedForm, form.Created);
+
+            return Ok(response);
+        }
+        catch (System.Exception)
+        {
+            return BadRequest(new ErrorMessage("Something went wrong", HttpStatusCode.BadRequest));
+        }
+
+
+
+
+
+    }
 
 
 
