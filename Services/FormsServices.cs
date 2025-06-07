@@ -2,6 +2,8 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Azure.Cosmos;
 using Models;
+using System.Net.Http.Headers;
+using System.Net;
 
 namespace Services;
 
@@ -18,7 +20,14 @@ public class FormsService
             formStoreDatabaseSettings.Value.ConnectionString,
             new CosmosClientOptions
             {
-                SerializerOptions = new CosmosSerializationOptions { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase },
+
+                UseSystemTextJsonSerializerWithOptions = new System.Text.Json.JsonSerializerOptions()
+                {
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                    AllowOutOfOrderMetadataProperties = true,
+                    WriteIndented = true
+                }
+
             }
 
         );
@@ -34,37 +43,48 @@ public class FormsService
     }
 
     public async Task CreateAsync(Form newForm) => await _formsContainer.UpsertItemAsync<Form>(newForm);
-    public async Task<bool> CheckFormExistsByNameAsync(string formName)
+    public async Task<(bool, HttpStatusCode)> CheckFormExistsByNameAsync(string formName)
     {
-        string formByNameQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName} f WHERE f.name = @formName";
+        try
+        {
+            string formByNameQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName} f WHERE f.name = @formName";
 
-        var query = new QueryDefinition(formByNameQuery)
-        .WithParameter("@formName", formName);
+            var query = new QueryDefinition(formByNameQuery)
+            .WithParameter("@formName", formName);
 
-        using FeedIterator<Form> feed = _formsContainer.GetItemQueryIterator<Form>(
-           queryDefinition: query
-        );
+            using FeedIterator<Form> feed = _formsContainer.GetItemQueryIterator<Form>(
+               queryDefinition: query
+            );
 
-        FeedResponse<Form> response = await feed.ReadNextAsync();
+            FeedResponse<Form> response = await feed.ReadNextAsync();
 
-        return response.ToList().Count == 0;
+            return (response.ToList().Count == 0, response.StatusCode);
+        }
+        catch (CosmosException ex)
+        {
+            return (false, ex.StatusCode);
+        }
     }
 
-    public async Task<Form?> GetFormByIdAsync(string id)
+    public async Task<(Form?, HttpStatusCode)> GetFormByIdAsync(string id)
     {
-        string formByIdQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName} f WHERE f.id = @id";
 
-        var query = new QueryDefinition(formByIdQuery)
-        .WithParameter("@id", id);
+        try
+        {
+            Form form = await _formsContainer.ReadItemAsync<Form>(
+                  id: id,
+                  partitionKey: new PartitionKey(id)
+            );
+            return (form, HttpStatusCode.OK);
 
-        using FeedIterator<Form> feed = _formsContainer.GetItemQueryIterator<Form>(
-           queryDefinition: query
-        );
-
-        FeedResponse<Form> response = await feed.ReadNextAsync();
-
-        return response.FirstOrDefault();
+        }
+        catch (CosmosException ex)
+        {
+            return (null, ex.StatusCode);
+        }
     }
+
+
 
     public async Task<List<Form>> GetFormsAsync()
     {
@@ -100,17 +120,6 @@ public class FormsService
     public async Task<ItemResponse<Form>> UpdateFormAsync(Form form, DateTime created)
     {
 
-        //     ItemResponse<Form> response = await _formsContainer.PatchItemAsync<Form>(
-        //         id: form.Id,
-        //         partitionKey: new PartitionKey(form.Id),
-        //         patchOperations: new[] {
-        //             PatchOperation.Add("/name", form.Name),
-        //             PatchOperation.Add("/title", form.Title),
-        //             PatchOperation.Add("/description", form.Description),
-        //             PatchOperation.Add("/questions", form.Questions),
-        //             PatchOperation.Add("/lastUpdated", form.LastUpdated)
-        //         }
-        // );
         form.Created = created;
         ItemResponse<Form> item = await _formsContainer.UpsertItemAsync<Form>(form, new PartitionKey(form.Id));
         return item;

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos;
 using Models;
 using Services;
 
@@ -20,6 +21,9 @@ public class FormController : ControllerBase
 
     public record ErrorMessage(string message, HttpStatusCode statusCode);
 
+
+
+
     [HttpGet]
     public async Task<IActionResult> GetForms()
     {
@@ -31,8 +35,12 @@ public class FormController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateForm(CreateFormRequest formRequest)
     {
-        // Verify that the form name is unique
-        bool formNameIsUnique = await _formsService.CheckFormExistsByNameAsync(formRequest.Name);
+        var (formNameIsUnique, formNameIsUniqueStatusCode) = await _formsService.CheckFormExistsByNameAsync(formRequest.Name);
+
+        if (formNameIsUniqueStatusCode != HttpStatusCode.OK)
+        {
+            return BadRequest(new ErrorMessage("Something went wrong", HttpStatusCode.BadRequest));
+        }
 
         if (!formNameIsUnique)
         {
@@ -61,28 +69,61 @@ public class FormController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetForm(string id)
     {
-        var form = await _formsService.GetFormByIdAsync(id);
+        var (formResponse, statusCode) = await _formsService.GetFormByIdAsync(id);
 
-        if (form == null)
+        if (formResponse is null)
         {
-            return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
+            if (statusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound(new ErrorMessage("Form not found", statusCode));
+            }
+            else
+            {
+                return BadRequest(new ErrorMessage("Something went wrong", statusCode));
+            }
         }
 
-        return Ok(form);
+        return Ok(formResponse);
     }
 
     [HttpPost("{id}")]
     public async Task<IActionResult> UpdateForm(UpdateFormRequest formRequest)
     {
-        var form = await _formsService.GetFormByIdAsync(formRequest.Id);
 
-        if (form == null)
+        var (formResponse, formResponseStatusCode) = await _formsService.GetFormByIdAsync(formRequest.Id);
+
+        if (formResponse is null)
         {
-            return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
+            if (formResponseStatusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound(new ErrorMessage("Form not found", formResponseStatusCode));
+            }
+            else
+            {
+                return BadRequest(new ErrorMessage("Something went wrong", formResponseStatusCode));
+            }
         }
+
+        if (formRequest.Name != formResponse.Name)
+        {
+            var (formNameIsUnique, formNameIsUniqueStatusCode) = await _formsService.CheckFormExistsByNameAsync(formRequest.Name);
+
+            if (formNameIsUniqueStatusCode != HttpStatusCode.OK)
+            {
+                return BadRequest(new ErrorMessage("Something went wrong", HttpStatusCode.BadRequest));
+            }
+
+            if (!formNameIsUnique)
+            {
+                return BadRequest(new ErrorMessage("Form name is not unique", HttpStatusCode.BadRequest));
+            }
+        }
+
+
 
         try
         {
+
             Form updatedForm = new()
             {
                 Id = formRequest.Id,
@@ -93,7 +134,7 @@ public class FormController : ControllerBase
                 LastUpdated = DateTime.UtcNow
             };
 
-            var response = await _formsService.UpdateFormAsync(updatedForm, form.Created);
+            var response = await _formsService.UpdateFormAsync(updatedForm, formResponse.Created);
 
             return Ok(response);
         }
@@ -102,10 +143,6 @@ public class FormController : ControllerBase
             return BadRequest(new ErrorMessage("Something went wrong", HttpStatusCode.BadRequest));
         }
 
-
-
-
-
     }
 
 
@@ -113,13 +150,22 @@ public class FormController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteForm(string id)
     {
-        var form = await _formsService.GetFormByIdAsync(id);
 
-        if (form == null)
+        var (formResponse, statusCode) = await _formsService.GetFormByIdAsync(id);
+
+        if (formResponse is null)
         {
-            return NotFound(new ErrorMessage("Form not found", HttpStatusCode.NotFound));
+            if (statusCode == HttpStatusCode.NotFound)
+            {
+                return NotFound(new ErrorMessage("Form not found", statusCode));
+            }
+            else
+            {
+                return BadRequest(new ErrorMessage("Something went wrong", statusCode));
+            }
         }
 
+        Form form = formResponse;
         try
         {
             var response = await _formsService.DeleteFormByIdAsync(id);
