@@ -1,6 +1,7 @@
+using FormagenAPI.Middlewares;
+using FormagenAPI.Services;
 using Models;
 using Services;
-
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +27,7 @@ builder.Services.Configure<FormStoreDatabaseSettings>(
     builder.Configuration.GetSection("FormStoreDatabase")
 );
 
-builder.Services.AddSingleton<FormsService>();
+builder.Services.AddSingleton<IFormService, FormService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -49,5 +50,7 @@ app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseErrorHandling();
 
 app.Run();
