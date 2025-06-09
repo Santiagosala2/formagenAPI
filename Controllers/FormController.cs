@@ -115,7 +115,7 @@ public class FormController : ControllerBase
 
             if (!formNameIsUnique)
             {
-                return BadRequest(new ErrorMessage("Form name is not unique", HttpStatusCode.BadRequest));
+                return BadRequest(new ErrorMessage("Form name is not unique, could not save", HttpStatusCode.BadRequest));
             }
         }
 
