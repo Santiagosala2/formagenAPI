@@ -16,8 +16,6 @@ public class FormController : ControllerBase
         _formService = formService;
     }
 
-    public record ErrorMessage(string message, HttpStatusCode statusCode);
-
     [HttpGet]
     public async Task<IActionResult> GetForms()
     {

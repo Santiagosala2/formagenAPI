@@ -2,20 +2,24 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Azure.Cosmos;
 using Models;
-using System.Net.Http.Headers;
-using System.Net;
-using System.CodeDom.Compiler;
 using Helpers;
+using System.Text.Json.Serialization;
 
 namespace Services;
 
-public class AdminServices
+public class AdminService
 {
     private readonly Container _adminSessionContainer;
     private readonly FormStoreDatabaseSettings _formStoreDatabaseSettings;
 
-    public AdminServices(
-        IOptions<FormStoreDatabaseSettings> formStoreDatabaseSettings)
+    private readonly EmailServiceSettings _emailServiceSettings;
+
+    private readonly HttpClient _emailClient;
+
+    public AdminService(
+        IOptions<FormStoreDatabaseSettings> formStoreDatabaseSettings,
+        IOptions<EmailServiceSettings> emailServiceSettings
+        )
     {
 
         CosmosClient cosmosClient = new(
@@ -31,6 +35,11 @@ public class AdminServices
             }
 
         );
+
+        using HttpClient _emailClient = new();
+        _emailClient.BaseAddress = new Uri(emailServiceSettings.Value.EmailFlowURI);
+        _emailServiceSettings = emailServiceSettings.Value;
+
 
         Database database = cosmosClient.GetDatabase(formStoreDatabaseSettings.Value.DatabaseName);
 
@@ -56,6 +65,7 @@ public class AdminServices
             await CreateSessionAsync(session);
 
             // trigger send otp service
+            // await _emailClient.PostAsync("","");
             otpSent = true;
         }
         else

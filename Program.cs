@@ -27,7 +27,7 @@ builder.Services.Configure<FormStoreDatabaseSettings>(
     builder.Configuration.GetSection("FormStoreDatabase")
 );
 
-builder.Services.AddSingleton<AdminServices>();
+builder.Services.AddSingleton<AdminService>();
 builder.Services.AddSingleton<IFormService, FormService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>

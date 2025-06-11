@@ -1,4 +1,5 @@
 ﻿using FormagenAPI.Exceptions;
+using Microsoft.Azure.Cosmos;
 using System.Net;
 
 namespace FormagenAPI.Middlewares
@@ -23,33 +24,25 @@ namespace FormagenAPI.Middlewares
             {
                 var errorResponse = new ErrorResponse();
 
+
                 if (ex is FormNotFoundException)
                 {
                     errorResponse.Message = "Form is not found";
-                    context.Response.StatusCode = (int) HttpStatusCode.NotFound;
+                    errorResponse.StatusCode = HttpStatusCode.NotFound;
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 }
 
-                if (ex is CreateFormException)
+                if (ex is FormNameIsNotUniqueException)
                 {
-                    errorResponse.Message = "Create form failed";
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    errorResponse.Message = "Form name is not unique";
+                    errorResponse.StatusCode = HttpStatusCode.BadRequest;
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 }
 
-                if (ex is UpdateFormException)
-                {
-                    errorResponse.Message = "Update form failed";
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                }
-
-                if (ex is DeleteFormException)
-                {
-                    errorResponse.Message = "Delete form failed";
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                }
-
-                if (ex is Exception)
+                if (ex is UnexpectedCosmosException)
                 {
                     errorResponse.Message = "Something went wrong";
+                    errorResponse.StatusCode = HttpStatusCode.InternalServerError;
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 }
 

@@ -1,3 +1,4 @@
+using System.Net;
 using DTOs;
 using FormagenAPI.Exceptions;
 using FormagenAPI.Services;
@@ -61,7 +62,7 @@ public class FormService : IFormService
                 Name = createFormRequest.Name,
                 Created = DateTime.UtcNow,
                 LastUpdated = DateTime.UtcNow
-            }; 
+            };
 
             await _formsContainer.UpsertItemAsync<Form>(form);
 
@@ -75,14 +76,10 @@ public class FormService : IFormService
         }
         catch (CosmosException ex)
         {
-            throw new CreateFormException("Cosmos Exception", ex);
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
-        catch(Exception ex)
-        {
-            throw new CreateFormException("Unknown Exception", ex);
-        }
-    }  
-        
+    }
+
 
     public async Task<bool> CheckFormExistsByNameAsync(string formName)
     {
@@ -109,42 +106,55 @@ public class FormService : IFormService
                   partitionKey: new PartitionKey(id)
             );
 
-            if (form == null)
-                throw new FormNotFoundException("Form is null");
-
             return form;
         }
         catch (CosmosException ex)
         {
-            throw new FormNotFoundException("Cosmos Exception", ex);
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                throw new FormNotFoundException("Form is not found", ex);
+            }
+            else
+            {
+                throw new UnexpectedCosmosException("Cosmos Exception", ex);
+            }
+
         }
-        catch (Exception ex)
-        {
-            throw new FormNotFoundException("Unknown exception", ex);
-        }
+
     }
 
     public async Task<List<Form>> GetFormsAsync()
     {
-        string formByIdQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName}";
 
-        var query = new QueryDefinition(formByIdQuery);
-
-        using FeedIterator<Form> feed = _formsContainer.GetItemQueryIterator<Form>(
-           queryDefinition: query
-        );
-
-        List<Form> items = new();
-        while (feed.HasMoreResults)
+        try
         {
-            FeedResponse<Form> response = await feed.ReadNextAsync();
-            foreach (Form item in response)
+            string formByIdQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName}";
+
+            var query = new QueryDefinition(formByIdQuery);
+
+            using FeedIterator<Form> feed = _formsContainer.GetItemQueryIterator<Form>(
+               queryDefinition: query
+            );
+
+            List<Form> items = new();
+            while (feed.HasMoreResults)
             {
-                items.Add(item);
+                FeedResponse<Form> response = await feed.ReadNextAsync();
+                foreach (Form item in response)
+                {
+                    items.Add(item);
+                }
             }
+
+            return items;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
 
-        return items;
+
+
     }
 
     public async Task<ItemResponse<Form>> DeleteFormByIdAsync(string id)
@@ -153,16 +163,12 @@ public class FormService : IFormService
 
         try
         {
-           var item = await _formsContainer.DeleteItemAsync<ItemResponse<Form>>(id, new PartitionKey(id));
-           return item;
+            var item = await _formsContainer.DeleteItemAsync<ItemResponse<Form>>(id, new PartitionKey(id));
+            return item;
         }
         catch (CosmosException ex)
         {
-            throw new DeleteFormException("Cosmos Exception", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new DeleteFormException("Unknown exception", ex);
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
     }
 
@@ -198,11 +204,7 @@ public class FormService : IFormService
         }
         catch (CosmosException ex)
         {
-            throw new UpdateFormException("Cosmos Exception", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new UpdateFormException("Unknown exception", ex);
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
     }
 }

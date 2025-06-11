@@ -12,17 +12,14 @@ namespace FormagenAPI.Controllers;
 [Route("api/[controller]")]
 public class AdminController : ControllerBase
 {
-    private readonly AdminServices _adminService;
+    private readonly AdminService _adminService;
 
-    public AdminController(AdminServices formsService)
+    public AdminController(AdminService formsService)
     {
         _adminService = formsService;
     }
 
     public record ErrorMessage(string message, HttpStatusCode statusCode);
-
-
-
 
     [HttpPost("otp")]
     public async Task<IActionResult> SendOTP(SendOTPRequest sendOTPRequest)
