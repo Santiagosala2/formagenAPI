@@ -4,6 +4,7 @@ using Microsoft.Azure.Cosmos;
 using Models;
 using Helpers;
 using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace Services;
 
@@ -15,6 +16,8 @@ public class AdminService
     private readonly EmailServiceSettings _emailServiceSettings;
 
     private readonly HttpClient _emailClient;
+
+    public record EmailServicePayload(string email, string otp);
 
     public AdminService(
         IOptions<FormStoreDatabaseSettings> formStoreDatabaseSettings,
@@ -36,8 +39,7 @@ public class AdminService
 
         );
 
-        using HttpClient _emailClient = new();
-        _emailClient.BaseAddress = new Uri(emailServiceSettings.Value.EmailFlowURI);
+        _emailClient = new HttpClient();
         _emailServiceSettings = emailServiceSettings.Value;
 
 
@@ -64,8 +66,10 @@ public class AdminService
             session!.OTP = otp;
             await CreateSessionAsync(session);
 
+            var payload = new StringContent(JsonSerializer.Serialize(new EmailServicePayload(email, otp)));
+
             // trigger send otp service
-            // await _emailClient.PostAsync("","");
+            await _emailClient.PostAsync(_emailServiceSettings.FlowURI, payload);
             otpSent = true;
         }
         else

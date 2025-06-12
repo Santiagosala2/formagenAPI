@@ -27,6 +27,11 @@ builder.Services.Configure<FormStoreDatabaseSettings>(
     builder.Configuration.GetSection("FormStoreDatabase")
 );
 
+builder.Services.Configure<EmailServiceSettings>(
+    builder.Configuration.GetSection("EmailService")
+);
+
+
 builder.Services.AddSingleton<AdminService>();
 builder.Services.AddSingleton<IFormService, FormService>();
 
