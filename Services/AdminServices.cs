@@ -5,10 +5,13 @@ using Models;
 using Helpers;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using FormagenAPI.Services;
+using System.Net;
+using FormagenAPI.Exceptions;
 
 namespace Services;
 
-public class AdminService
+public class AdminService : IAdminService
 {
     private readonly Container _adminSessionContainer;
     private readonly FormStoreDatabaseSettings _formStoreDatabaseSettings;
@@ -97,6 +100,25 @@ public class AdminService
 
     public async Task CreateSessionAsync(AdminSession newAdminSession) => await _adminSessionContainer.UpsertItemAsync<AdminSession>(newAdminSession);
 
+    public async Task<AdminSession> GetSessionByIdAsync(string sessionId)
+    {
+        try
+        {
+            var session = await _adminSessionContainer.ReadItemAsync<AdminSession>(sessionId, new PartitionKey(sessionId));
+            return session;
+        }
+        catch (CosmosException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                throw new AdminSessionNotFoundException("Sessions is not found", ex);
+            }
+            else
+            {
+                throw new UnexpectedCosmosException("Cosmos Exception", ex);
+            }
+        }
+    }
     private async Task<(bool, AdminSession?)> VerifyEmailExistsAsync(string email)
     {
         // check if the admin session store that the user exists

@@ -11,6 +11,8 @@ namespace Models
         [Required]
         public string UserEmail { get; set; } = null!;
         public string OTP { get; set; } = null!;
+
+        public DateTime ExpiresAt { get; set; }
     }
 
 }

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using DTOs;
+using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using Models;
@@ -12,9 +13,9 @@ namespace FormagenAPI.Controllers;
 [Route("api/[controller]")]
 public class AdminController : ControllerBase
 {
-    private readonly AdminService _adminService;
+    private readonly IAdminService _adminService;
 
-    public AdminController(AdminService formsService)
+    public AdminController(IAdminService formsService)
     {
         _adminService = formsService;
     }
@@ -46,6 +47,18 @@ public class AdminController : ControllerBase
         }
 
         return Ok(passOtp);
+    }
+
+    [AuthorizeSession]
+    [HttpGet("user")]
+    public IActionResult AdminUser()
+    {
+        var session = HttpContext.Items["Session"] as AdminSession;
+        AdminUserResponse adminUserResponse = new()
+        {
+            Email = session!.UserEmail
+        };
+        return Ok(adminUserResponse);
     }
 
 

@@ -12,7 +12,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:3000")
+                          policy.WithOrigins("https://localhost:3000")
+                                .AllowCredentials()
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
@@ -32,7 +33,7 @@ builder.Services.Configure<EmailServiceSettings>(
 );
 
 
-builder.Services.AddSingleton<AdminService>();
+builder.Services.AddSingleton<IAdminService, AdminService>();
 builder.Services.AddSingleton<IFormService, FormService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
