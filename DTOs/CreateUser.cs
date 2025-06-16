@@ -1,18 +1,18 @@
+
+
 using System.ComponentModel.DataAnnotations;
+using Models;
 
 namespace DTOs
 {
-    public class SendOTPRequest
+    public class CreateUser
     {
+
         [Required]
+        public string Name { get; set; } = null!;
+        [Required]
+        [EmailAddress]
         public string Email { get; set; } = null!;
 
     }
-
-    public class SendOTPResponse
-    {
-        public string OTPsent { get; set; } = null!;
-
-    }
-
 }

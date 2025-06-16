@@ -9,4 +9,6 @@ public class FormStoreDatabaseSettings
     public string FormCollectionName { get; set; } = null!;
 
     public string AdminSessionCollectionName { get; set; } = null!;
+
+    public string AdminUserCollectionName { get; set; } = null!;
 }

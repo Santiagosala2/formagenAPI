@@ -9,7 +9,7 @@ namespace Models
         [Required]
         public string Id { get; set; } = null!;
         [Required]
-        public string UserEmail { get; set; } = null!;
+        public string Email { get; set; } = null!;
         public string OTP { get; set; } = null!;
 
         public DateTime ExpiresAt { get; set; }

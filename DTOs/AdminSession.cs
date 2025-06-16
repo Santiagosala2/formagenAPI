@@ -5,9 +5,8 @@ using Models;
 
 namespace DTOs
 {
-    public class AdminUserResponse
+    public class AdminSessionResponse
     {
-
         public string Email { get; set; } = null!;
     }
 

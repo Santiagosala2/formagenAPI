@@ -10,14 +10,6 @@ namespace FormagenAPI.Exceptions
         }
     }
 
-    public class AdminSessionNotFoundException : Exception
-    {
-
-        public AdminSessionNotFoundException(string message, Exception inner) : base(message, inner)
-        {
-        }
-    }
-
     public class FormNameIsNotUniqueException : Exception
     {
 
@@ -26,6 +18,22 @@ namespace FormagenAPI.Exceptions
         }
 
         public FormNameIsNotUniqueException(string message, Exception inner) : base(message, inner)
+        {
+        }
+    }
+
+    public class AdminSessionNotFoundException : Exception
+    {
+
+        public AdminSessionNotFoundException(string message, Exception inner) : base(message, inner)
+        {
+        }
+    }
+
+    public class AdminUserNotFoundException : Exception
+    {
+
+        public AdminUserNotFoundException(string message, Exception inner) : base(message, inner)
         {
         }
     }

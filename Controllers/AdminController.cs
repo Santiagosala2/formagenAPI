@@ -3,9 +3,7 @@ using System.Net;
 using DTOs;
 using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
 using Models;
-using Services;
 
 namespace FormagenAPI.Controllers;
 
@@ -25,7 +23,7 @@ public class AdminController : ControllerBase
     [HttpPost("otp")]
     public async Task<IActionResult> SendOTP(SendOTPRequest sendOTPRequest)
     {
-        var sentOtp = await _adminService.SendOTPAsync(sendOTPRequest.UserEmail);
+        var sentOtp = await _adminService.SendOTPAsync(sendOTPRequest.Email);
 
         return Ok(sentOtp);
     }
@@ -54,11 +52,11 @@ public class AdminController : ControllerBase
     public IActionResult AdminUser()
     {
         var session = HttpContext.Items["Session"] as AdminSession;
-        AdminUserResponse adminUserResponse = new()
+        AdminSessionResponse adminSessionResponse = new()
         {
-            Email = session!.UserEmail
+            Email = session!.Email
         };
-        return Ok(adminUserResponse);
+        return Ok(adminSessionResponse);
     }
 
 

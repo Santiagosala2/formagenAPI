@@ -8,12 +8,15 @@ using System.Text.Json;
 using FormagenAPI.Services;
 using System.Net;
 using FormagenAPI.Exceptions;
+using DTOs;
 
 namespace Services;
 
 public class AdminService : IAdminService
 {
     private readonly Container _adminSessionContainer;
+
+    private readonly Container _adminUserContainer;
     private readonly FormStoreDatabaseSettings _formStoreDatabaseSettings;
 
     private readonly EmailServiceSettings _emailServiceSettings;
@@ -51,6 +54,9 @@ public class AdminService : IAdminService
         _adminSessionContainer = database.GetContainer(
            formStoreDatabaseSettings.Value.AdminSessionCollectionName);
 
+        _adminUserContainer = database.GetContainer(
+           formStoreDatabaseSettings.Value.AdminUserCollectionName);
+
         _formStoreDatabaseSettings = formStoreDatabaseSettings.Value;
 
 
@@ -58,14 +64,22 @@ public class AdminService : IAdminService
 
     public async Task<bool> SendOTPAsync(string email)
     {
-        var (userExists, session) = await this.VerifyEmailExistsAsync(email);
+        var user = await this.GetUserByEmailAsync(email);
         bool otpSent = false;
 
-        if (userExists)
+        if (user is not null)
         {
             // prepare otp
             var otp = OtpGenerator.GenerateOtp();
             // replace current otp
+            AdminSession session = new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                OTP = otp,
+                Email = user.Email,
+                ExpiresAt = DateTime.Now.AddHours(1)
+            };
+
             session!.OTP = otp;
             await CreateSessionAsync(session);
 
@@ -85,7 +99,7 @@ public class AdminService : IAdminService
 
     public async Task<(bool, AdminSession?)> VerifyOTPAsync(string email, string otp)
     {
-        var (userExists, session) = await this.VerifyEmailExistsAsync(email);
+        var (userExists, session) = await this.GetSessionByEmailAsync(email);
 
         if (userExists)
         {
@@ -119,13 +133,13 @@ public class AdminService : IAdminService
             }
         }
     }
-    private async Task<(bool, AdminSession?)> VerifyEmailExistsAsync(string email)
+    private async Task<(bool, AdminSession?)> GetSessionByEmailAsync(string email)
     {
         // check if the admin session store that the user exists
-        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminSessionCollectionName} f WHERE f.userEmail = @userEmail";
+        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminSessionCollectionName} f WHERE f.email = @email ORDER BY f.created DESC";
 
         var query = new QueryDefinition(userByEmailQuery)
-            .WithParameter("@userEmail", email.ToLower());
+            .WithParameter("@email", email.ToLower());
 
         using FeedIterator<AdminSession> feed = _adminSessionContainer.GetItemQueryIterator<AdminSession>(
                queryDefinition: query
@@ -135,6 +149,73 @@ public class AdminService : IAdminService
 
         return (response.ToList().Count > 0, response.FirstOrDefault());
     }
+
+    private async Task<AdminUser?> GetUserByEmailAsync(string email)
+    {
+        // check if the admin session store that the user exists
+        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} f WHERE f.email = @email";
+
+        var query = new QueryDefinition(userByEmailQuery)
+            .WithParameter("@email", email.ToLower());
+
+        using FeedIterator<AdminUser> feed = _adminSessionContainer.GetItemQueryIterator<AdminUser>(
+               queryDefinition: query
+            );
+
+        FeedResponse<AdminUser> response = await feed.ReadNextAsync();
+
+        return response.FirstOrDefault();
+    }
+
+    public async Task<bool> CreateUserAsync(CreateUser userRequest)
+    {
+
+        try
+        {
+            AdminUser user = new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = userRequest.Name,
+                Email = userRequest.Email,
+                Created = DateTime.UtcNow,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            await _adminUserContainer.CreateItemAsync(user, new PartitionKey(user.Id));
+
+            return true;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
+
+    public async Task<ItemResponse<AdminUser>> DeleteUserAsync(AdminUser user)
+    {
+
+        try
+        {
+            var deleteUserResponse = await _adminUserContainer.DeleteItemAsync<ItemResponse<AdminUser>>(user.Id, new PartitionKey(user.Id));
+            return deleteUserResponse;
+        }
+        catch (CosmosException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                throw new AdminUserNotFoundException("Admin user is not found", ex);
+            }
+            else
+            {
+                throw new UnexpectedCosmosException("Cosmos Exception", ex);
+            }
+
+        }
+    }
+
+
+
 
 
 
