@@ -153,12 +153,12 @@ public class AdminService : IAdminService
     private async Task<AdminUser?> GetUserByEmailAsync(string email)
     {
         // check if the admin session store that the user exists
-        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} f WHERE f.email = @email";
+        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
 
         var query = new QueryDefinition(userByEmailQuery)
             .WithParameter("@email", email.ToLower());
 
-        using FeedIterator<AdminUser> feed = _adminSessionContainer.GetItemQueryIterator<AdminUser>(
+        using FeedIterator<AdminUser> feed = _adminUserContainer.GetItemQueryIterator<AdminUser>(
                queryDefinition: query
             );
 
@@ -176,7 +176,7 @@ public class AdminService : IAdminService
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = userRequest.Name,
-                Email = userRequest.Email,
+                Email = userRequest.Email.ToLower(),
                 Created = DateTime.UtcNow,
                 LastUpdated = DateTime.UtcNow
             };
