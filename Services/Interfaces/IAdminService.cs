@@ -11,5 +11,7 @@ namespace FormagenAPI.Services
         Task<(bool, AdminSession?)> VerifyOTPAsync(string email, string otp);
 
         Task<AdminSession> GetSessionByIdAsync(string sessionId);
+
+        Task<AdminUser> CreateUserAsync(CreateUser user);
     }
 }

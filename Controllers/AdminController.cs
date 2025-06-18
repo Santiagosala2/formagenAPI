@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using DTOs;
 using FormagenAPI.Services;
@@ -57,6 +56,14 @@ public class AdminController : ControllerBase
             Email = session!.Email
         };
         return Ok(adminSessionResponse);
+    }
+
+    [AuthorizeSession]
+    [HttpPost("user")]
+    public async Task<IActionResult> CreateUser(CreateUser createUserRequest)
+    {
+        var user = await _adminService.CreateUserAsync(createUserRequest);
+        return Ok(user);
     }
 
 

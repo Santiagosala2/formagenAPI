@@ -77,7 +77,7 @@ public class AdminService : IAdminService
                 Id = Guid.NewGuid().ToString(),
                 OTP = otp,
                 Email = user.Email,
-                ExpiresAt = DateTime.Now.AddHours(1)
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
             };
 
             session!.OTP = otp;
@@ -125,7 +125,7 @@ public class AdminService : IAdminService
         {
             if (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                throw new AdminSessionNotFoundException("Sessions is not found", ex);
+                throw new AdminSessionNotFoundException("Session is not found", ex);
             }
             else
             {
@@ -152,23 +152,36 @@ public class AdminService : IAdminService
 
     private async Task<AdminUser?> GetUserByEmailAsync(string email)
     {
-        // check if the admin session store that the user exists
-        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
+        try
+        {
+            string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
 
-        var query = new QueryDefinition(userByEmailQuery)
-            .WithParameter("@email", email.ToLower());
+            var query = new QueryDefinition(userByEmailQuery)
+                .WithParameter("@email", email.ToLower());
 
-        using FeedIterator<AdminUser> feed = _adminUserContainer.GetItemQueryIterator<AdminUser>(
-               queryDefinition: query
-            );
+            using FeedIterator<AdminUser> feed = _adminUserContainer.GetItemQueryIterator<AdminUser>(
+                   queryDefinition: query
+                );
 
-        FeedResponse<AdminUser> response = await feed.ReadNextAsync();
+            FeedResponse<AdminUser> response = await feed.ReadNextAsync();
 
-        return response.FirstOrDefault();
+            return response.FirstOrDefault();
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException(ex.Message.ToString(), ex);
+        }
+
     }
 
-    public async Task<bool> CreateUserAsync(CreateUser userRequest)
+    public async Task<AdminUser> CreateUserAsync(CreateUser userRequest)
     {
+        var userExists = await this.GetUserByEmailAsync(userRequest.Email);
+
+        if (userExists is not null)
+        {
+            throw new UserEmailNotUniqueException("User email is not unique");
+        }
 
         try
         {
@@ -183,7 +196,7 @@ public class AdminService : IAdminService
 
             await _adminUserContainer.CreateItemAsync(user, new PartitionKey(user.Id));
 
-            return true;
+            return user;
         }
         catch (CosmosException ex)
         {

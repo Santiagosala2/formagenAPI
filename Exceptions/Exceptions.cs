@@ -22,6 +22,19 @@ namespace FormagenAPI.Exceptions
         }
     }
 
+
+    public class UserEmailNotUniqueException : Exception
+    {
+
+        public UserEmailNotUniqueException(string message) : base(message)
+        {
+        }
+
+        public UserEmailNotUniqueException(string message, Exception inner) : base(message, inner)
+        {
+        }
+    }
+
     public class AdminSessionNotFoundException : Exception
     {
 

@@ -27,17 +27,35 @@ namespace FormagenAPI.Middlewares
 
                 if (ex is FormNotFoundException)
                 {
-                    errorResponse.Message = "Form is not found";
+                    errorResponse.Message = ex.Message;
                     errorResponse.StatusCode = HttpStatusCode.NotFound;
                     context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 }
 
                 if (ex is FormNameIsNotUniqueException)
                 {
-                    errorResponse.Message = "Form name is not unique";
+                    errorResponse.Message = ex.Message;
                     errorResponse.StatusCode = HttpStatusCode.BadRequest;
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 }
+
+
+                if (ex is UserEmailNotUniqueException)
+                {
+                    errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.BadRequest;
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                }
+
+                if (ex is AdminSessionNotFoundException)
+                {
+                    errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.BadRequest;
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                }
+
+
+
 
                 if (ex is UnexpectedCosmosException)
                 {
