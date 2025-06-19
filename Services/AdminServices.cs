@@ -227,6 +227,36 @@ public class AdminService : IAdminService
         }
     }
 
+    public async Task<List<AdminUser>> GetUsersAsync()
+    {
+        try
+        {
+            string getAllUsersQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName}";
+
+            var query = new QueryDefinition(getAllUsersQuery);
+
+            using FeedIterator<AdminUser> feed = _adminUserContainer.GetItemQueryIterator<AdminUser>(
+               queryDefinition: query
+            );
+
+            List<AdminUser> users = new();
+            while (feed.HasMoreResults)
+            {
+                FeedResponse<AdminUser> response = await feed.ReadNextAsync();
+                foreach (AdminUser user in response)
+                {
+                    users.Add(user);
+                }
+            }
+
+            return users;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
 
 
 

@@ -13,5 +13,7 @@ namespace FormagenAPI.Services
         Task<AdminSession> GetSessionByIdAsync(string sessionId);
 
         Task<AdminUser> CreateUserAsync(CreateUser user);
+
+        Task<List<AdminUser>> GetUsersAsync();
     }
 }

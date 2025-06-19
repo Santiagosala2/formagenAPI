@@ -66,6 +66,15 @@ public class AdminController : ControllerBase
         return Ok(user);
     }
 
+    [AuthorizeSession]
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _adminService.GetUsersAsync();
+        return Ok(users);
+    }
+
+
 
 
 
