@@ -133,46 +133,6 @@ public class AdminService : IAdminService
             }
         }
     }
-    private async Task<(bool, AdminSession?)> GetSessionByEmailAsync(string email)
-    {
-        // check if the admin session store that the user exists
-        string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminSessionCollectionName} f WHERE f.email = @email ORDER BY f.created DESC";
-
-        var query = new QueryDefinition(userByEmailQuery)
-            .WithParameter("@email", email.ToLower());
-
-        using FeedIterator<AdminSession> feed = _adminSessionContainer.GetItemQueryIterator<AdminSession>(
-               queryDefinition: query
-            );
-
-        FeedResponse<AdminSession> response = await feed.ReadNextAsync();
-
-        return (response.ToList().Count > 0, response.FirstOrDefault());
-    }
-
-    private async Task<AdminUser?> GetUserByEmailAsync(string email)
-    {
-        try
-        {
-            string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
-
-            var query = new QueryDefinition(userByEmailQuery)
-                .WithParameter("@email", email.ToLower());
-
-            using FeedIterator<AdminUser> feed = _adminUserContainer.GetItemQueryIterator<AdminUser>(
-                   queryDefinition: query
-                );
-
-            FeedResponse<AdminUser> response = await feed.ReadNextAsync();
-
-            return response.FirstOrDefault();
-        }
-        catch (CosmosException ex)
-        {
-            throw new UnexpectedCosmosException(ex.Message.ToString(), ex);
-        }
-
-    }
 
     public async Task<AdminUser> CreateUserAsync(CreateUser userRequest)
     {
@@ -204,20 +164,22 @@ public class AdminService : IAdminService
         }
     }
 
-
-    public async Task<ItemResponse<AdminUser>> DeleteUserAsync(AdminUser user)
+    public async Task<AdminUser> GetUserByIdAsync(string id)
     {
-
         try
         {
-            var deleteUserResponse = await _adminUserContainer.DeleteItemAsync<ItemResponse<AdminUser>>(user.Id, new PartitionKey(user.Id));
-            return deleteUserResponse;
+            var user = await _adminUserContainer.ReadItemAsync<AdminUser>(
+                  id: id,
+                  partitionKey: new PartitionKey(id)
+            );
+
+            return user;
         }
         catch (CosmosException ex)
         {
             if (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                throw new AdminUserNotFoundException("Admin user is not found", ex);
+                throw new AdminUserNotFoundException("User is not found", ex);
             }
             else
             {
@@ -225,7 +187,37 @@ public class AdminService : IAdminService
             }
 
         }
+
     }
+
+
+    public async Task<bool> DeleteUserAsync(string userId)
+    {
+        try
+        {
+            var user = await GetUserByIdAsync(userId);
+
+            if (user.IsOwner)
+            {
+                throw new AdminUserOwnerException("Admin user is owner");
+            }
+
+            var deleteUserSessions = await DeleteUserSessionsAsync(user!.Email);
+            if (!deleteUserSessions)
+            {
+                throw new AdminUserSessionsCouldNotDeleteException("Could not delete admin user sessions");
+            }
+            var deleteUserResponse = await _adminUserContainer.DeleteItemAsync<ItemResponse<AdminUser>>(user.Id, new PartitionKey(user.Id));
+            return true;
+
+        }
+        catch (CosmosException ex)
+        {
+
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
 
     public async Task<List<AdminUser>> GetUsersAsync()
     {
@@ -255,6 +247,86 @@ public class AdminService : IAdminService
         {
             throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
+    }
+
+    private FeedIterator<AdminSession> GetUserSessionsFeed(string email)
+    {
+        try
+        {
+            // check if the admin session store that the user exists
+            string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminSessionCollectionName} f WHERE f.email = @email ORDER BY f.created DESC";
+
+            var query = new QueryDefinition(userByEmailQuery)
+                .WithParameter("@email", email.ToLower());
+
+            using FeedIterator<AdminSession> feed = _adminSessionContainer.GetItemQueryIterator<AdminSession>(
+                   queryDefinition: query
+                );
+
+            return feed;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException(ex.Message.ToString(), ex);
+        }
+
+    }
+
+    private async Task<(bool, AdminSession?)> GetSessionByEmailAsync(string email)
+    {
+
+        FeedResponse<AdminSession> response = await GetUserSessionsFeed(email).ReadNextAsync();
+
+        return (response.ToList().Count > 0, response.FirstOrDefault());
+    }
+
+
+    private async Task<AdminUser?> GetUserByEmailAsync(string email)
+    {
+        try
+        {
+            string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
+
+            var query = new QueryDefinition(userByEmailQuery)
+                .WithParameter("@email", email.ToLower());
+
+            using FeedIterator<AdminUser> feed = _adminUserContainer.GetItemQueryIterator<AdminUser>(
+                   queryDefinition: query
+                );
+
+            FeedResponse<AdminUser> response = await feed.ReadNextAsync();
+
+            return response.FirstOrDefault();
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException(ex.Message.ToString(), ex);
+        }
+
+    }
+
+    private async Task<bool> DeleteUserSessionsAsync(string email)
+    {
+        bool deletAllSessions = true;
+        var userSessionsFeed = GetUserSessionsFeed(email);
+        while (userSessionsFeed.HasMoreResults)
+        {
+            FeedResponse<AdminSession> response = await userSessionsFeed.ReadNextAsync();
+            foreach (AdminSession session in response)
+            {
+                try
+                {
+                    await _adminSessionContainer.DeleteItemAsync<ItemResponse<AdminSession>>(session.Id, new PartitionKey(session.Id));
+                }
+                catch (CosmosException ex)
+                {
+                    deletAllSessions = false;
+                    throw new UnexpectedCosmosException(ex.Message.ToString(), ex);
+                }
+
+            }
+        }
+        return deletAllSessions;
     }
 
 

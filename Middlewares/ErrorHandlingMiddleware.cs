@@ -50,10 +50,30 @@ namespace FormagenAPI.Middlewares
                 if (ex is AdminSessionNotFoundException)
                 {
                     errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.NotFound;
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                }
+
+                if (ex is AdminUserNotFoundException)
+                {
+                    errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.NotFound;
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                }
+
+                if (ex is AdminUserOwnerException)
+                {
+                    errorResponse.Message = ex.Message;
                     errorResponse.StatusCode = HttpStatusCode.BadRequest;
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 }
 
+                if (ex is AdminUserSessionsCouldNotDeleteException)
+                {
+                    errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.BadRequest;
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                }
 
 
 

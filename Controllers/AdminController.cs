@@ -74,6 +74,14 @@ public class AdminController : ControllerBase
         return Ok(users);
     }
 
+    [AuthorizeSession]
+    [HttpDelete("user/{id}")]
+    public async Task<IActionResult> DeleteForm(string id)
+    {
+        var formResponse = await _adminService.DeleteUserAsync(id);
+        return Ok(formResponse);
+    }
+
 
 
 

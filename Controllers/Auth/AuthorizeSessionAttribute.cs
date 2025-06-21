@@ -23,12 +23,15 @@ public class AuthorizeSessionAttribute : Attribute, IAsyncAuthorizationFilter
         var adminService = httpContext.RequestServices.GetService<IAdminService>();
         var session = await adminService!.GetSessionByIdAsync(sessionId);
 
-        if (session == null /*|| session.ExpiresAt < DateTime.UtcNow*/)
+        if (session is not null)
         {
-            context.Result = new UnauthorizedResult();
-            return;
+            if (session.ExpiresAt < DateTime.UtcNow)
+            {
+                context.Result = new UnauthorizedResult();
+                return;
+            }
+
         }
-        // Optionally attach session to context
         httpContext.Items["Session"] = session;
     }
 }

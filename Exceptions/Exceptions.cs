@@ -51,6 +51,24 @@ namespace FormagenAPI.Exceptions
         }
     }
 
+
+    public class AdminUserOwnerException : Exception
+    {
+
+        public AdminUserOwnerException(string message) : base(message)
+        {
+        }
+    }
+
+
+    public class AdminUserSessionsCouldNotDeleteException : Exception
+    {
+
+        public AdminUserSessionsCouldNotDeleteException(string message) : base(message)
+        {
+        }
+    }
+
     public class UnexpectedCosmosException : Exception
     {
 
