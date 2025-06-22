@@ -136,7 +136,7 @@ public class AdminService : IAdminService
 
     public async Task<AdminUser> CreateUserAsync(CreateUser userRequest)
     {
-        var userExists = await this.GetUserByEmailAsync(userRequest.Email);
+        var userExists = await GetUserByEmailAsync(userRequest.Email);
 
         if (userExists is not null)
         {
@@ -162,6 +162,28 @@ public class AdminService : IAdminService
         {
             throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
+    }
+
+    public async Task<ItemResponse<AdminUser>> UpdateUserAsync(UpdateUser updateRequest)
+    {
+        try
+        {
+            var user = await GetUserByIdAsync(updateRequest.Id);
+            var updatedUser = new AdminUser()
+            {
+                Id = user.Id,
+                Name = updateRequest.Name,
+                LastUpdated = DateTime.UtcNow
+            };
+            var response = await _adminUserContainer.UpsertItemAsync<AdminUser>(updatedUser, new PartitionKey(user.Id));
+            return response;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+
+
     }
 
     public async Task<AdminUser> GetUserByIdAsync(string id)

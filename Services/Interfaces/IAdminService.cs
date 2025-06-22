@@ -17,5 +17,7 @@ namespace FormagenAPI.Services
         Task<List<AdminUser>> GetUsersAsync();
 
         Task<bool> DeleteUserAsync(string userId);
+
+        Task<ItemResponse<AdminUser>> UpdateUserAsync(UpdateUser updateRequest);
     }
 }

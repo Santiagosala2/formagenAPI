@@ -82,6 +82,15 @@ public class AdminController : ControllerBase
         return Ok(formResponse);
     }
 
+    [AuthorizeSession]
+    [HttpPost]
+    public async Task<IActionResult> UpdateForm(UpdateUser updateUserRequest)
+    {
+
+        var formResponse = await _adminService.UpdateUserAsync(updateUserRequest);
+        return Ok(formResponse);
+    }
+
 
 
 
