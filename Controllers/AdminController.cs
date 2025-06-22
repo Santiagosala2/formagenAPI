@@ -83,7 +83,7 @@ public class AdminController : ControllerBase
     }
 
     [AuthorizeSession]
-    [HttpPost]
+    [HttpPost("updateUser")]
     public async Task<IActionResult> UpdateForm(UpdateUser updateUserRequest)
     {
 

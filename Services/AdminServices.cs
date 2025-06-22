@@ -173,6 +173,7 @@ public class AdminService : IAdminService
             {
                 Id = user.Id,
                 Name = updateRequest.Name,
+                Email = user.Email,
                 LastUpdated = DateTime.UtcNow
             };
             var response = await _adminUserContainer.UpsertItemAsync<AdminUser>(updatedUser, new PartitionKey(user.Id));
