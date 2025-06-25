@@ -39,6 +39,10 @@ namespace Models
     public class DateQuestion : BaseQuestion
     {
         public DateTime? DefaultValue { get; set; }
+
+        public bool? DateRestriction { get; set; }
+
+        public string? DateRestrictionRule { get; set; }
         public string Type = "Date";
 
     }

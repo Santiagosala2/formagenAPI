@@ -41,7 +41,7 @@ public class FormController : ControllerBase
     }
 
     [AuthorizeSession]
-    [HttpPost]
+    [HttpPost("{id}")]
     public async Task<IActionResult> UpdateForm(UpdateFormRequest UpdateFormRequest)
     {
 
