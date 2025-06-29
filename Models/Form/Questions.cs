@@ -9,6 +9,7 @@ namespace Models
     [JsonDerivedType(typeof(TextQuestion), typeDiscriminator: "Text")]
     [JsonDerivedType(typeof(DateQuestion), typeDiscriminator: "Date")]
     [JsonDerivedType(typeof(CheckboxQuestion), typeDiscriminator: "Checkbox")]
+    [JsonDerivedType(typeof(RadioQuestion), typeDiscriminator: "Radio")]
     public class BaseQuestion
     {
         [Required]
@@ -51,6 +52,14 @@ namespace Models
     {
         public bool? DefaultValue { get; set; }
         public string Type = "Checkbox";
+
+    }
+
+
+    public class RadioQuestion : BaseQuestion
+    {
+        public string? DefaultValue { get; set; }
+        public string Type = "Radio";
 
     }
 
