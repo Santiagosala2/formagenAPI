@@ -61,6 +61,8 @@ namespace Models
         public string? DefaultValue { get; set; }
         public string Type = "Radio";
 
+        public List<string> Items { get; set; } = null!;
+
     }
 
 }
