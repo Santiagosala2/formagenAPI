@@ -50,8 +50,11 @@ namespace Models
 
     public class CheckboxQuestion : BaseQuestion
     {
-        public bool? DefaultValue { get; set; }
+        public dynamic? DefaultValue { get; set; }
         public string Type = "Checkbox";
+        public List<string>? Items { get; set; } = null!;
+
+        public bool? Multi { get; set; }
 
     }
 
