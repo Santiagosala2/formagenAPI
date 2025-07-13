@@ -2,9 +2,9 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Models.Admin
+namespace Models.User
 {
-    public class AdminUser
+    public class User
     {
         [Required]
         public string Id { get; set; } = null!;
@@ -17,8 +17,6 @@ namespace Models.Admin
         public DateTime Created { get; set; }
 
         public DateTime LastUpdated { get; set; }
-
-        public bool IsOwner { get; set; } = false;
     }
 
 }

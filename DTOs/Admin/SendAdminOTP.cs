@@ -1,15 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DTOs
+namespace DTOs.Admin
 {
-    public class SendOTPRequest
+    public class SendAdminOTPRequest
     {
         [Required]
         public string Email { get; set; } = null!;
 
     }
 
-    public class SendOTPResponse
+    public class SendAdminOTPResponse
     {
         public string OTPsent { get; set; } = null!;
 

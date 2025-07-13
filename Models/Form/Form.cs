@@ -1,8 +1,9 @@
 
 
 using System.ComponentModel.DataAnnotations;
+using Models.Questions;
 
-namespace Models
+namespace Models.Form
 {
     public class Form
     {

@@ -1,7 +1,7 @@
 
 
 using System.ComponentModel.DataAnnotations;
-using Models;
+using Models.Questions;
 
 namespace DTOs
 {

@@ -16,7 +16,7 @@ public class FormController : ControllerBase
         _formService = formService;
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpGet]
     public async Task<IActionResult> GetForms()
     {
@@ -24,7 +24,7 @@ public class FormController : ControllerBase
         return Ok(forms);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpPost]
     public async Task<IActionResult> CreateForm(CreateFormRequest formRequest)
     {
@@ -32,7 +32,7 @@ public class FormController : ControllerBase
         return Ok(formResponse);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetForm(string id)
     {
@@ -40,7 +40,7 @@ public class FormController : ControllerBase
         return Ok(formResponse);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpPost("{id}")]
     public async Task<IActionResult> UpdateForm(UpdateFormRequest UpdateFormRequest)
     {

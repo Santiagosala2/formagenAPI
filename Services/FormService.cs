@@ -12,14 +12,14 @@ namespace Services;
 public class FormService : IFormService
 {
     private readonly Container _formsContainer;
-    private readonly FormStoreDatabaseSettings _formStoreDatabaseSettings;
+    private readonly DatabaseSettings _databaseSettings;
 
     public FormService(
-        IOptions<FormStoreDatabaseSettings> formStoreDatabaseSettings)
+        IOptions<DatabaseSettings> databaseSettings)
     {
 
         CosmosClient cosmosClient = new(
-            formStoreDatabaseSettings.Value.ConnectionString,
+            databaseSettings.Value.ConnectionString,
             new CosmosClientOptions
             {
 
@@ -34,12 +34,12 @@ public class FormService : IFormService
 
         );
 
-        Database database = cosmosClient.GetDatabase(formStoreDatabaseSettings.Value.DatabaseName);
+        Database database = cosmosClient.GetDatabase(databaseSettings.Value.DatabaseName);
 
         _formsContainer = database.GetContainer(
-           formStoreDatabaseSettings.Value.FormCollectionName);
+           databaseSettings.Value.FormCollectionName);
 
-        _formStoreDatabaseSettings = formStoreDatabaseSettings.Value;
+        _databaseSettings = databaseSettings.Value;
 
 
     }
@@ -83,7 +83,7 @@ public class FormService : IFormService
 
     public async Task<bool> CheckFormExistsByNameAsync(string formName)
     {
-        string formByNameQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName} f WHERE f.name = @formName";
+        string formByNameQuery = $"SELECT * FROM {_databaseSettings.FormCollectionName} f WHERE f.name = @formName";
 
         var query = new QueryDefinition(formByNameQuery)
         .WithParameter("@formName", formName);
@@ -128,7 +128,7 @@ public class FormService : IFormService
 
         try
         {
-            string formByIdQuery = $"SELECT * FROM {_formStoreDatabaseSettings.FormCollectionName}";
+            string formByIdQuery = $"SELECT * FROM {_databaseSettings.FormCollectionName}";
 
             var query = new QueryDefinition(formByIdQuery);
 

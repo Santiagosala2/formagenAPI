@@ -2,9 +2,9 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Models.Admin
+namespace Models.User
 {
-    public class AdminSession
+    public class UserSession
     {
         [Required]
         public string Id { get; set; } = null!;
@@ -12,6 +12,8 @@ namespace Models.Admin
         public string Email { get; set; } = null!;
         public string OTP { get; set; } = null!;
 
+        public bool Used { get; set; } = false;
+        public DateTime UseUntil { get; set; }
         public DateTime ExpiresAt { get; set; }
     }
 

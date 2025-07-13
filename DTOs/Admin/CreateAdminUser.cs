@@ -1,11 +1,10 @@
 
 
 using System.ComponentModel.DataAnnotations;
-using Models;
 
-namespace DTOs
+namespace DTOs.Admin
 {
-    public class CreateUser
+    public class CreateAdminUser
     {
 
         [Required]

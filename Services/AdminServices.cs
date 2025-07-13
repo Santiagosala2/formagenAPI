@@ -2,13 +2,14 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Azure.Cosmos;
 using Models;
+using Models.Admin;
 using Helpers;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using FormagenAPI.Services;
 using System.Net;
 using FormagenAPI.Exceptions;
-using DTOs;
+using DTOs.Admin;
 
 namespace Services;
 
@@ -17,7 +18,7 @@ public class AdminService : IAdminService
     private readonly Container _adminSessionContainer;
 
     private readonly Container _adminUserContainer;
-    private readonly FormStoreDatabaseSettings _formStoreDatabaseSettings;
+    private readonly DatabaseSettings _databaseSettings;
 
     private readonly EmailServiceSettings _emailServiceSettings;
 
@@ -26,13 +27,13 @@ public class AdminService : IAdminService
     public record EmailServicePayload(string email, string otp);
 
     public AdminService(
-        IOptions<FormStoreDatabaseSettings> formStoreDatabaseSettings,
+        IOptions<DatabaseSettings> databaseSettings,
         IOptions<EmailServiceSettings> emailServiceSettings
         )
     {
 
         CosmosClient cosmosClient = new(
-            formStoreDatabaseSettings.Value.ConnectionString,
+            databaseSettings.Value.ConnectionString,
             new CosmosClientOptions
             {
 
@@ -49,22 +50,22 @@ public class AdminService : IAdminService
         _emailServiceSettings = emailServiceSettings.Value;
 
 
-        Database database = cosmosClient.GetDatabase(formStoreDatabaseSettings.Value.DatabaseName);
+        Database database = cosmosClient.GetDatabase(databaseSettings.Value.DatabaseName);
 
         _adminSessionContainer = database.GetContainer(
-           formStoreDatabaseSettings.Value.AdminSessionCollectionName);
+           databaseSettings.Value.AdminSessionCollectionName);
 
         _adminUserContainer = database.GetContainer(
-           formStoreDatabaseSettings.Value.AdminUserCollectionName);
+           databaseSettings.Value.AdminUserCollectionName);
 
-        _formStoreDatabaseSettings = formStoreDatabaseSettings.Value;
+        _databaseSettings = databaseSettings.Value;
 
 
     }
 
     public async Task<bool> SendOTPAsync(string email)
     {
-        var user = await this.GetUserByEmailAsync(email);
+        var user = await GetUserByEmailAsync(email);
         bool otpSent = false;
 
         if (user is not null)
@@ -134,7 +135,7 @@ public class AdminService : IAdminService
         }
     }
 
-    public async Task<AdminUser> CreateUserAsync(CreateUser userRequest)
+    public async Task<AdminUser> CreateUserAsync(CreateAdminUser userRequest)
     {
         var userExists = await GetUserByEmailAsync(userRequest.Email);
 
@@ -164,7 +165,7 @@ public class AdminService : IAdminService
         }
     }
 
-    public async Task<ItemResponse<AdminUser>> UpdateUserAsync(UpdateUser updateRequest)
+    public async Task<ItemResponse<AdminUser>> UpdateUserAsync(UpdateAdminUser updateRequest)
     {
         try
         {
@@ -246,7 +247,7 @@ public class AdminService : IAdminService
     {
         try
         {
-            string getAllUsersQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName}";
+            string getAllUsersQuery = $"SELECT * FROM {_databaseSettings.AdminUserCollectionName}";
 
             var query = new QueryDefinition(getAllUsersQuery);
 
@@ -277,7 +278,7 @@ public class AdminService : IAdminService
         try
         {
             // check if the admin session store that the user exists
-            string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminSessionCollectionName} f WHERE f.email = @email ORDER BY f.created DESC";
+            string userByEmailQuery = $"SELECT * FROM {_databaseSettings.AdminSessionCollectionName} f WHERE f.email = @email ORDER BY f.created DESC";
 
             var query = new QueryDefinition(userByEmailQuery)
                 .WithParameter("@email", email.ToLower());
@@ -308,7 +309,7 @@ public class AdminService : IAdminService
     {
         try
         {
-            string userByEmailQuery = $"SELECT * FROM {_formStoreDatabaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
+            string userByEmailQuery = $"SELECT * FROM {_databaseSettings.AdminUserCollectionName} u WHERE u.email = @email";
 
             var query = new QueryDefinition(userByEmailQuery)
                 .WithParameter("@email", email.ToLower());

@@ -51,6 +51,23 @@ namespace FormagenAPI.Exceptions
         }
     }
 
+    public class UserSessionNotFoundException : Exception
+    {
+
+        public UserSessionNotFoundException(string message, Exception inner) : base(message, inner)
+        {
+        }
+    }
+
+
+    public class UserNotFoundException : Exception
+    {
+
+        public UserNotFoundException(string message, Exception inner) : base(message, inner)
+        {
+        }
+    }
+
 
     public class AdminUserOwnerException : Exception
     {

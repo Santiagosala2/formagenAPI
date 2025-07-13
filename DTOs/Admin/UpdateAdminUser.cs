@@ -1,10 +1,9 @@
 
 using System.ComponentModel.DataAnnotations;
-using Models;
 
-namespace DTOs
+namespace DTOs.Admin
 {
-    public class UpdateUser
+    public class UpdateAdminUser
     {
         [Required]
         public string Id { get; set; } = null!;

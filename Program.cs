@@ -24,7 +24,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.Configure<FormStoreDatabaseSettings>(
+builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("FormStoreDatabase")
 );
 

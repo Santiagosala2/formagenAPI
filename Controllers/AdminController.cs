@@ -1,8 +1,8 @@
 using System.Net;
-using DTOs;
+using DTOs.Admin;
 using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Models;
+using Models.Admin;
 
 namespace FormagenAPI.Controllers;
 
@@ -17,10 +17,8 @@ public class AdminController : ControllerBase
         _adminService = formsService;
     }
 
-    public record ErrorMessage(string message, HttpStatusCode statusCode);
-
     [HttpPost("otp")]
-    public async Task<IActionResult> SendOTP(SendOTPRequest sendOTPRequest)
+    public async Task<IActionResult> SendOTP(SendAdminOTPRequest sendOTPRequest)
     {
         var sentOtp = await _adminService.SendOTPAsync(sendOTPRequest.Email);
 
@@ -28,7 +26,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("verifyOtp")]
-    public async Task<IActionResult> VerifyOTP(VerifyOTPRequest verifyOTPRequest)
+    public async Task<IActionResult> VerifyOTP(VerifyAdminOTPRequest verifyOTPRequest)
     {
         var (passOtp, session) = await _adminService.VerifyOTPAsync(verifyOTPRequest.Email, verifyOTPRequest.OTP);
 
@@ -46,9 +44,9 @@ public class AdminController : ControllerBase
         return Ok(passOtp);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpGet("user")]
-    public IActionResult AdminUser()
+    public IActionResult GetAdminUser()
     {
         var session = HttpContext.Items["Session"] as AdminSession;
         AdminSessionResponse adminSessionResponse = new()
@@ -58,33 +56,33 @@ public class AdminController : ControllerBase
         return Ok(adminSessionResponse);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpPost("user")]
-    public async Task<IActionResult> CreateUser(CreateUser createUserRequest)
+    public async Task<IActionResult> CreateAdminUser(CreateAdminUser createUserRequest)
     {
         var user = await _adminService.CreateUserAsync(createUserRequest);
         return Ok(user);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetAdminUsers()
     {
         var users = await _adminService.GetUsersAsync();
         return Ok(users);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpDelete("user/{id}")]
-    public async Task<IActionResult> DeleteForm(string id)
+    public async Task<IActionResult> DeleteAdminUser(string id)
     {
         var formResponse = await _adminService.DeleteUserAsync(id);
         return Ok(formResponse);
     }
 
-    [AuthorizeSession]
+    [AdminAuthorizeSession]
     [HttpPost("updateUser")]
-    public async Task<IActionResult> UpdateForm(UpdateUser updateUserRequest)
+    public async Task<IActionResult> UpdateAdminUser(UpdateAdminUser updateUserRequest)
     {
 
         var formResponse = await _adminService.UpdateUserAsync(updateUserRequest);

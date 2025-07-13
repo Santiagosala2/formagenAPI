@@ -2,10 +2,10 @@ using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-public class AuthorizeSessionAttribute : Attribute, IAsyncAuthorizationFilter
+public class AdminAuthorizeSessionAttribute : Attribute, IAsyncAuthorizationFilter
 {
 
-    public AuthorizeSessionAttribute()
+    public AdminAuthorizeSessionAttribute()
     {
     }
 

@@ -1,6 +1,6 @@
 namespace Models;
 
-public class FormStoreDatabaseSettings
+public class DatabaseSettings
 {
     public string ConnectionString { get; set; } = null!;
 
@@ -11,4 +11,8 @@ public class FormStoreDatabaseSettings
     public string AdminSessionCollectionName { get; set; } = null!;
 
     public string AdminUserCollectionName { get; set; } = null!;
+
+    public string UserSessionCollectionName { get; set; } = null!;
+
+    public string UserCollectionName { get; set; } = null!;
 }

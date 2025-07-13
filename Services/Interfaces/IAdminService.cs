@@ -1,6 +1,6 @@
-using DTOs;
+using DTOs.Admin;
 using Microsoft.Azure.Cosmos;
-using Models;
+using Models.Admin;
 
 namespace FormagenAPI.Services
 {
@@ -12,12 +12,12 @@ namespace FormagenAPI.Services
 
         Task<AdminSession> GetSessionByIdAsync(string sessionId);
 
-        Task<AdminUser> CreateUserAsync(CreateUser user);
+        Task<AdminUser> CreateUserAsync(CreateAdminUser user);
 
         Task<List<AdminUser>> GetUsersAsync();
 
         Task<bool> DeleteUserAsync(string userId);
 
-        Task<ItemResponse<AdminUser>> UpdateUserAsync(UpdateUser updateRequest);
+        Task<ItemResponse<AdminUser>> UpdateUserAsync(UpdateAdminUser updateRequest);
     }
 }

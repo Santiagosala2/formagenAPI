@@ -2,7 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Models;
+using Models.Questions;
 
 namespace DTOs
 {
