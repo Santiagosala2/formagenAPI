@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DTOs.Admin
 {
-    public class CreateAdminUser
+    public class CreateAdminUserRequest
     {
 
         [Required]

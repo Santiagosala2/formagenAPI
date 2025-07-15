@@ -1,11 +1,13 @@
 using System.Net;
-using DTOs;
+using DTOs.Form;
 using FormagenAPI.Exceptions;
 using FormagenAPI.Services;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
+using Models.Form;
 using Models;
 using MongoDB.Driver;
+using Models.User;
 
 namespace Services;
 
@@ -14,8 +16,10 @@ public class FormService : IFormService
     private readonly Container _formsContainer;
     private readonly DatabaseSettings _databaseSettings;
 
+    private readonly IUserService _userService;
+
     public FormService(
-        IOptions<DatabaseSettings> databaseSettings)
+        IOptions<DatabaseSettings> databaseSettings, IUserService userService)
     {
 
         CosmosClient cosmosClient = new(
@@ -40,6 +44,8 @@ public class FormService : IFormService
            databaseSettings.Value.FormCollectionName);
 
         _databaseSettings = databaseSettings.Value;
+
+        _userService = userService;
 
 
     }
@@ -172,7 +178,7 @@ public class FormService : IFormService
         }
     }
 
-    public async Task<ItemResponse<Form>> UpdateFormAsync(UpdateFormRequest updateFormRequest)
+    public async Task<ItemResponse<Form>> UpdateFormAsync(SaveFormRequest updateFormRequest)
     {
         var form = await GetFormByIdAsync(updateFormRequest.Id);
 
@@ -196,6 +202,7 @@ public class FormService : IFormService
                 Description = updateFormRequest.Description,
                 Questions = updateFormRequest.Questions,
                 Created = form.Created,
+                SharedUsers = form.SharedUsers,
                 LastUpdated = DateTime.UtcNow
             };
 
@@ -207,4 +214,40 @@ public class FormService : IFormService
             throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
     }
+
+
+
+    public async Task<ItemResponse<Form>> ShareFormAsync(ShareFormRequest shareFormRequest)
+    {
+        try
+        {
+            var form = await GetFormByIdAsync(shareFormRequest.FormId);
+            foreach (var user in shareFormRequest.Users)
+            {
+                await _userService.GetUserByIdAsync(user.Id);
+            }
+
+            List<SharedUser> sharedUsers = form.SharedUsers.Concat(shareFormRequest.Users).DistinctBy(u => u.Id).ToList();
+
+            var updatedForm = new Form()
+            {
+                Id = form.Id,
+                Name = form.Name,
+                Title = form.Title,
+                Description = form.Description,
+                Questions = form.Questions,
+                Created = form.Created,
+                SharedUsers = sharedUsers,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            ItemResponse<Form> updatedform = await _formsContainer.UpsertItemAsync(updatedForm, new PartitionKey(form.Id));
+            return updatedform;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
 }

@@ -1,9 +1,9 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace DTOs.User
+namespace Models.User
 {
-    public class ShareUser
+    public class SharedUser
     {
         [Required]
         public string Id { get; set; } = null!;

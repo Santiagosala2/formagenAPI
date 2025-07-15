@@ -135,7 +135,7 @@ public class AdminService : IAdminService
         }
     }
 
-    public async Task<AdminUser> CreateUserAsync(CreateAdminUser userRequest)
+    public async Task<AdminUser> CreateUserAsync(CreateAdminUserRequest userRequest)
     {
         var userExists = await GetUserByEmailAsync(userRequest.Email);
 

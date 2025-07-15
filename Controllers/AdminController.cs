@@ -58,7 +58,7 @@ public class AdminController : ControllerBase
 
     [AdminAuthorizeSession]
     [HttpPost("user")]
-    public async Task<IActionResult> CreateAdminUser(CreateAdminUser createUserRequest)
+    public async Task<IActionResult> CreateAdminUser(CreateAdminUserRequest createUserRequest)
     {
         var user = await _adminService.CreateUserAsync(createUserRequest);
         return Ok(user);

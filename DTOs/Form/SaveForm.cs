@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Models.Questions;
 
-namespace DTOs
+namespace DTOs.Form
 {
-    public class UpdateFormRequest
+    public class SaveFormRequest
     {
         [Required]
         public string Id { get; set; } = null!;

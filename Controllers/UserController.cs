@@ -12,9 +12,9 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
 
-    public UserController(IUserService formsService)
+    public UserController(IUserService userService)
     {
-        _userService = formsService;
+        _userService = userService;
     }
 
     [HttpPost("otp")]

@@ -3,20 +3,21 @@
 using System.ComponentModel.DataAnnotations;
 using Models.Questions;
 
-namespace DTOs
+namespace DTOs.Form
 {
-    public class CreateFormRequest
+    public class RemoveAccessFormRequest
     {
 
         [Required]
-        public string Name { get; set; } = null!;
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public List<BaseQuestion>? Questions { get; set; }
+        public string Id { get; set; } = null!;
+
+        [Required]
+        public string UserId { get; set; } = null!;
+
 
     }
 
-    public class CreateFormResponse
+    public class RemoveAccessFormResponse
     {
 
         public string Id { get; set; } = null!;

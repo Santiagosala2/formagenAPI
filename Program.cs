@@ -32,7 +32,7 @@ builder.Services.Configure<EmailServiceSettings>(
     builder.Configuration.GetSection("EmailService")
 );
 
-
+builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddSingleton<IAdminService, AdminService>();
 builder.Services.AddSingleton<IFormService, FormService>();
 

@@ -12,6 +12,8 @@ namespace FormagenAPI.Services
 
         Task<UserSession> GetSessionByIdAsync(string sessionId);
 
+        Task<Models.User.User> GetUserByIdAsync(string id);
+
         Task<Models.User.User> CreateUserAsync(CreateUser user);
 
         Task<List<Models.User.User>> GetUsersAsync();

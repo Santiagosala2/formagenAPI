@@ -1,5 +1,5 @@
 using System.Net;
-using DTOs;
+using DTOs.Form;
 using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,10 +42,10 @@ public class FormController : ControllerBase
 
     [AdminAuthorizeSession]
     [HttpPost("{id}")]
-    public async Task<IActionResult> UpdateForm(UpdateFormRequest UpdateFormRequest)
+    public async Task<IActionResult> UpdateForm(SaveFormRequest SaveFormRequest)
     {
 
-        var formResponse = await _formService.UpdateFormAsync(UpdateFormRequest);
+        var formResponse = await _formService.UpdateFormAsync(SaveFormRequest);
         return Ok(formResponse);
     }
 
@@ -55,4 +55,13 @@ public class FormController : ControllerBase
         var formResponse = await _formService.DeleteFormByIdAsync(id);
         return Ok(formResponse);
     }
+
+    [AdminAuthorizeSession]
+    [HttpPost("share/{id}")]
+    public async Task<IActionResult> ShareForm(ShareFormRequest updateFormRequest)
+    {
+        var formResponse = await _formService.ShareFormAsync(updateFormRequest);
+        return Ok(formResponse);
+    }
+
 }

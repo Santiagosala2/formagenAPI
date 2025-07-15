@@ -1,6 +1,6 @@
-﻿using DTOs;
+﻿using DTOs.Form;
 using Microsoft.Azure.Cosmos;
-using Models;
+using Models.Form;
 
 namespace FormagenAPI.Services
 {
@@ -12,8 +12,10 @@ namespace FormagenAPI.Services
 
         Task<CreateFormResponse> CreateFormAsync(CreateFormRequest createFormRequest);
 
-        Task<ItemResponse<Form>> UpdateFormAsync(UpdateFormRequest updateFormRequest);
+        Task<ItemResponse<Form>> UpdateFormAsync(SaveFormRequest updateFormRequest);
 
         Task<ItemResponse<Form>> DeleteFormByIdAsync(string id);
+
+        Task<ItemResponse<Form>> ShareFormAsync(ShareFormRequest shareFormRequest);
     }
 }
