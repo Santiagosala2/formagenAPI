@@ -57,7 +57,7 @@ public class FormController : ControllerBase
     }
 
     [AdminAuthorizeSession]
-    [HttpPost("share/{id}")]
+    [HttpPost("share/")]
     public async Task<IActionResult> ShareForm(ShareFormRequest updateFormRequest)
     {
         var formResponse = await _formService.ShareFormAsync(updateFormRequest);
