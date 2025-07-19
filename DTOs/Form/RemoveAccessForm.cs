@@ -17,12 +17,4 @@ namespace DTOs.Form
 
     }
 
-    public class RemoveAccessFormResponse
-    {
-
-        public string Id { get; set; } = null!;
-        public string Name { get; set; } = null!;
-        public List<BaseQuestion> Questions { get; } = new List<BaseQuestion>();
-    }
-
 }

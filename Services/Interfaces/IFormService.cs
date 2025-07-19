@@ -17,5 +17,9 @@ namespace FormagenAPI.Services
         Task<ItemResponse<Form>> DeleteFormByIdAsync(string id);
 
         Task<ItemResponse<Form>> ShareFormAsync(ShareFormRequest shareFormRequest);
+
+        Task<ItemResponse<Form>> RemoveAccessFormAsync(RemoveAccessFormRequest removeAccessFormRequest);
+
+
     }
 }

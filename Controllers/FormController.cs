@@ -58,9 +58,18 @@ public class FormController : ControllerBase
 
     [AdminAuthorizeSession]
     [HttpPost("share/")]
-    public async Task<IActionResult> ShareForm(ShareFormRequest updateFormRequest)
+    public async Task<IActionResult> ShareForm(ShareFormRequest shareFormRequest)
     {
-        var formResponse = await _formService.ShareFormAsync(updateFormRequest);
+        var formResponse = await _formService.ShareFormAsync(shareFormRequest);
+        return Ok(formResponse);
+    }
+
+
+    [AdminAuthorizeSession]
+    [HttpPost("removeAccess/")]
+    public async Task<IActionResult> RemoveAccessForm(RemoveAccessFormRequest removeAccessFormRequest)
+    {
+        var formResponse = await _formService.RemoveAccessFormAsync(removeAccessFormRequest);
         return Ok(formResponse);
     }
 

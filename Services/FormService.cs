@@ -250,4 +250,35 @@ public class FormService : IFormService
         }
     }
 
+    public async Task<ItemResponse<Form>> RemoveAccessFormAsync(RemoveAccessFormRequest removeAccessFormRequest)
+    {
+        try
+        {
+            var form = await GetFormByIdAsync(removeAccessFormRequest.Id);
+
+            var user = await _userService.GetUserByIdAsync(removeAccessFormRequest.UserId);
+
+            List<SharedUser> sharedUsers = form.SharedUsers.Where(u => u.Id != user.Id).ToList();
+
+            var updatedForm = new Form()
+            {
+                Id = form.Id,
+                Name = form.Name,
+                Title = form.Title,
+                Description = form.Description,
+                Questions = form.Questions,
+                Created = form.Created,
+                SharedUsers = sharedUsers,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            ItemResponse<Form> updatedform = await _formsContainer.UpsertItemAsync(updatedForm, new PartitionKey(form.Id));
+            return updatedform;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
 }
