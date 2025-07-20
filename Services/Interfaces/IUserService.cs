@@ -1,6 +1,6 @@
 using DTOs.User;
 using Microsoft.Azure.Cosmos;
-using Models.User;
+using Models;
 
 namespace FormagenAPI.Services
 {
@@ -8,9 +8,9 @@ namespace FormagenAPI.Services
     {
         Task<bool> SendOTPAsync(string email);
 
-        Task<(bool, UserSession?)> VerifyOTPAsync(string email, string otp);
+        Task<(bool, Session?)> VerifyOTPAsync(string email, string otp);
 
-        Task<UserSession> GetSessionByIdAsync(string sessionId);
+        Task<Session> GetSessionByIdAsync(string sessionId);
 
         Task<Models.User.User> GetUserByIdAsync(string id);
 

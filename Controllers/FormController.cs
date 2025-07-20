@@ -2,6 +2,8 @@ using System.Net;
 using DTOs.Form;
 using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Models;
+using Models.User;
 
 namespace FormagenAPI.Controllers;
 
@@ -32,11 +34,12 @@ public class FormController : ControllerBase
         return Ok(formResponse);
     }
 
-    [AdminAuthorizeSession]
+    [AuthorizeSession]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetForm(string id)
     {
-        var formResponse = await _formService.GetFormByIdAsync(id);
+        var session = HttpContext.Items["Session"] as Session;
+        var formResponse = await _formService.GetFormByIdAsync(id, session);
         return Ok(formResponse);
     }
 

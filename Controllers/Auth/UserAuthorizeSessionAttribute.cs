@@ -22,7 +22,7 @@ public class UserAuthorizeSessionAttribute : Attribute, IAsyncAuthorizationFilte
 
         var userService = httpContext.RequestServices.GetService<IUserService>();
         var session = await userService!.GetSessionByIdAsync(sessionId);
-
+        session.IsAdmin = false;
         if (session is not null)
         {
             if (session.ExpiresAt < DateTime.UtcNow)

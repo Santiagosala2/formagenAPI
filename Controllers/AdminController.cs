@@ -2,7 +2,7 @@ using System.Net;
 using DTOs.Admin;
 using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Models.Admin;
+using Models;
 
 namespace FormagenAPI.Controllers;
 
@@ -48,7 +48,7 @@ public class AdminController : ControllerBase
     [HttpGet("user")]
     public IActionResult GetAdminUser()
     {
-        var session = HttpContext.Items["Session"] as AdminSession;
+        var session = HttpContext.Items["Session"] as Session;
         AdminSessionResponse adminSessionResponse = new()
         {
             Email = session!.Email

@@ -2,7 +2,7 @@ using System.Net;
 using DTOs.User;
 using FormagenAPI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Models.User;
+using Models;
 
 namespace FormagenAPI.Controllers;
 
@@ -17,7 +17,7 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [HttpPost("otp")]
+    [HttpPost("user/otp")]
     public async Task<IActionResult> SendOTP(SendUserOTPRequest sendOTPRequest)
     {
         var sentOtp = await _userService.SendOTPAsync(sendOTPRequest.Email);
@@ -25,7 +25,7 @@ public class UserController : ControllerBase
         return Ok(sentOtp);
     }
 
-    [HttpPost("verifyOtp")]
+    [HttpPost("user/verifyOtp")]
     public async Task<IActionResult> VerifyOTP(VerifyOTPRequest verifyOTPRequest)
     {
         var (passOtp, session) = await _userService.VerifyOTPAsync(verifyOTPRequest.Email, verifyOTPRequest.OTP);
@@ -44,11 +44,11 @@ public class UserController : ControllerBase
         return Ok(passOtp);
     }
 
-    [AdminAuthorizeSession]
+    [UserAuthorizeSession]
     [HttpGet("user")]
     public IActionResult GetUser()
     {
-        var session = HttpContext.Items["Session"] as UserSession;
+        var session = HttpContext.Items["Session"] as Session;
         UserSessionResponse userSessionResponse = new()
         {
             Email = session!.Email

@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Microsoft.Azure.Cosmos;
-using Models.User;
 using Models;
 using Helpers;
 using System.Text.Json.Serialization;
@@ -82,7 +81,7 @@ public class UserService : IUserService
             // prepare otp
             otp = OtpGenerator.GenerateOtp();
             // replace current otp
-            UserSession session = new()
+            Session session = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 OTP = otp,
@@ -107,7 +106,7 @@ public class UserService : IUserService
         return otpSent;
     }
 
-    public async Task<(bool, UserSession?)> VerifyOTPAsync(string email, string otp)
+    public async Task<(bool, Session?)> VerifyOTPAsync(string email, string otp)
     {
         var (userExists, session) = await this.GetSessionByEmailAsync(email);
 
@@ -122,13 +121,13 @@ public class UserService : IUserService
         return (false, null);
     }
 
-    public async Task CreateSessionAsync(UserSession newUserSession) => await _userSessionContainer.UpsertItemAsync<UserSession>(newUserSession);
+    public async Task CreateSessionAsync(Session newUserSession) => await _userSessionContainer.UpsertItemAsync<Session>(newUserSession);
 
-    public async Task<UserSession> GetSessionByIdAsync(string sessionId)
+    public async Task<Session> GetSessionByIdAsync(string sessionId)
     {
         try
         {
-            var session = await _userSessionContainer.ReadItemAsync<UserSession>(sessionId, new PartitionKey(sessionId));
+            var session = await _userSessionContainer.ReadItemAsync<Session>(sessionId, new PartitionKey(sessionId));
             return session;
         }
         catch (CosmosException ex)
@@ -274,7 +273,7 @@ public class UserService : IUserService
         }
     }
 
-    private FeedIterator<UserSession> GetUserSessionsFeed(string email)
+    private FeedIterator<Session> GetUserSessionsFeed(string email)
     {
         try
         {
@@ -284,7 +283,7 @@ public class UserService : IUserService
             var query = new QueryDefinition(userByEmailQuery)
                 .WithParameter("@email", email.ToLower());
 
-            using FeedIterator<UserSession> feed = _userSessionContainer.GetItemQueryIterator<UserSession>(
+            using FeedIterator<Session> feed = _userSessionContainer.GetItemQueryIterator<Session>(
                    queryDefinition: query
                 );
 
@@ -297,10 +296,10 @@ public class UserService : IUserService
 
     }
 
-    private async Task<(bool, UserSession?)> GetSessionByEmailAsync(string email)
+    private async Task<(bool, Session?)> GetSessionByEmailAsync(string email)
     {
 
-        FeedResponse<UserSession> response = await GetUserSessionsFeed(email).ReadNextAsync();
+        FeedResponse<Session> response = await GetUserSessionsFeed(email).ReadNextAsync();
 
         return (response.ToList().Count > 0, response.FirstOrDefault());
     }
@@ -336,12 +335,12 @@ public class UserService : IUserService
         var userSessionsFeed = GetUserSessionsFeed(email);
         while (userSessionsFeed.HasMoreResults)
         {
-            FeedResponse<UserSession> response = await userSessionsFeed.ReadNextAsync();
-            foreach (UserSession session in response)
+            FeedResponse<Session> response = await userSessionsFeed.ReadNextAsync();
+            foreach (Session session in response)
             {
                 try
                 {
-                    await _userSessionContainer.DeleteItemAsync<ItemResponse<UserSession>>(session.Id, new PartitionKey(session.Id));
+                    await _userSessionContainer.DeleteItemAsync<ItemResponse<Session>>(session.Id, new PartitionKey(session.Id));
                 }
                 catch (CosmosException ex)
                 {
@@ -354,7 +353,7 @@ public class UserService : IUserService
         return deletAllSessions;
     }
 
-    private async Task<UserSession?> GetUsedSessions(string email)
+    private async Task<Session?> GetUsedSessions(string email)
     {
         try
         {
@@ -371,11 +370,11 @@ public class UserService : IUserService
                 .WithParameter("@expiresAt", expiresAt)
                 .WithParameter("@useUntil", useUntil);
 
-            using FeedIterator<UserSession> feed = _userSessionContainer.GetItemQueryIterator<UserSession>(
+            using FeedIterator<Session> feed = _userSessionContainer.GetItemQueryIterator<Session>(
                    queryDefinition: query
                 );
 
-            FeedResponse<UserSession> response = await feed.ReadNextAsync();
+            FeedResponse<Session> response = await feed.ReadNextAsync();
 
             return response.FirstOrDefault();
         }

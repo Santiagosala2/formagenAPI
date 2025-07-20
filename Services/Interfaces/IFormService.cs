@@ -1,12 +1,13 @@
 ﻿using DTOs.Form;
 using Microsoft.Azure.Cosmos;
+using Models;
 using Models.Form;
 
 namespace FormagenAPI.Services
 {
     public interface IFormService
     {
-        Task<Form> GetFormByIdAsync(string id);
+        Task<Form> GetFormByIdAsync(string id, Session? session);
 
         Task<List<Form>> GetFormsAsync();
 

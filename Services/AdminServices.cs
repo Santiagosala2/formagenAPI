@@ -15,7 +15,7 @@ namespace Services;
 
 public class AdminService : IAdminService
 {
-    private readonly Container _adminSessionContainer;
+    private readonly Container _sessionContainer;
 
     private readonly Container _adminUserContainer;
     private readonly DatabaseSettings _databaseSettings;
@@ -52,7 +52,7 @@ public class AdminService : IAdminService
 
         Database database = cosmosClient.GetDatabase(databaseSettings.Value.DatabaseName);
 
-        _adminSessionContainer = database.GetContainer(
+        _sessionContainer = database.GetContainer(
            databaseSettings.Value.AdminSessionCollectionName);
 
         _adminUserContainer = database.GetContainer(
@@ -73,7 +73,7 @@ public class AdminService : IAdminService
             // prepare otp
             var otp = OtpGenerator.GenerateOtp();
             // replace current otp
-            AdminSession session = new()
+            Session session = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 OTP = otp,
@@ -98,7 +98,7 @@ public class AdminService : IAdminService
         return otpSent;
     }
 
-    public async Task<(bool, AdminSession?)> VerifyOTPAsync(string email, string otp)
+    public async Task<(bool, Session?)> VerifyOTPAsync(string email, string otp)
     {
         var (userExists, session) = await this.GetSessionByEmailAsync(email);
 
@@ -113,13 +113,13 @@ public class AdminService : IAdminService
         return (false, null);
     }
 
-    public async Task CreateSessionAsync(AdminSession newAdminSession) => await _adminSessionContainer.UpsertItemAsync<AdminSession>(newAdminSession);
+    public async Task CreateSessionAsync(Session newSession) => await _sessionContainer.UpsertItemAsync<Session>(newSession);
 
-    public async Task<AdminSession> GetSessionByIdAsync(string sessionId)
+    public async Task<Session> GetSessionByIdAsync(string sessionId)
     {
         try
         {
-            var session = await _adminSessionContainer.ReadItemAsync<AdminSession>(sessionId, new PartitionKey(sessionId));
+            var session = await _sessionContainer.ReadItemAsync<Session>(sessionId, new PartitionKey(sessionId));
             return session;
         }
         catch (CosmosException ex)
@@ -273,7 +273,7 @@ public class AdminService : IAdminService
         }
     }
 
-    private FeedIterator<AdminSession> GetUserSessionsFeed(string email)
+    private FeedIterator<Session> GetUserSessionsFeed(string email)
     {
         try
         {
@@ -283,7 +283,7 @@ public class AdminService : IAdminService
             var query = new QueryDefinition(userByEmailQuery)
                 .WithParameter("@email", email.ToLower());
 
-            using FeedIterator<AdminSession> feed = _adminSessionContainer.GetItemQueryIterator<AdminSession>(
+            using FeedIterator<Session> feed = _sessionContainer.GetItemQueryIterator<Session>(
                    queryDefinition: query
                 );
 
@@ -296,10 +296,10 @@ public class AdminService : IAdminService
 
     }
 
-    private async Task<(bool, AdminSession?)> GetSessionByEmailAsync(string email)
+    private async Task<(bool, Session?)> GetSessionByEmailAsync(string email)
     {
 
-        FeedResponse<AdminSession> response = await GetUserSessionsFeed(email).ReadNextAsync();
+        FeedResponse<Session> response = await GetUserSessionsFeed(email).ReadNextAsync();
 
         return (response.ToList().Count > 0, response.FirstOrDefault());
     }
@@ -335,12 +335,12 @@ public class AdminService : IAdminService
         var userSessionsFeed = GetUserSessionsFeed(email);
         while (userSessionsFeed.HasMoreResults)
         {
-            FeedResponse<AdminSession> response = await userSessionsFeed.ReadNextAsync();
-            foreach (AdminSession session in response)
+            FeedResponse<Session> response = await userSessionsFeed.ReadNextAsync();
+            foreach (Session session in response)
             {
                 try
                 {
-                    await _adminSessionContainer.DeleteItemAsync<ItemResponse<AdminSession>>(session.Id, new PartitionKey(session.Id));
+                    await _sessionContainer.DeleteItemAsync<ItemResponse<Session>>(session.Id, new PartitionKey(session.Id));
                 }
                 catch (CosmosException ex)
                 {

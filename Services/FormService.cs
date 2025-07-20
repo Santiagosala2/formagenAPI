@@ -103,7 +103,7 @@ public class FormService : IFormService
         return response.ToList().Count == 0;
     }
 
-    public async Task<Form> GetFormByIdAsync(string id)
+    public async Task<Form> GetFormByIdAsync(string id, Session? session)
     {
         try
         {
@@ -111,6 +111,18 @@ public class FormService : IFormService
                   id: id,
                   partitionKey: new PartitionKey(id)
             );
+
+            if (session is not null)
+            {
+                if (!session.IsAdmin)
+                {
+                    var userAccess = form.Resource.SharedUsers.FirstOrDefault(u => u.Email == session.Email);
+                    if (userAccess == null)
+                    {
+                        throw new UnauthorizedAccessException("External user does not have access");
+                    }
+                }
+            }
 
             return form;
         }
@@ -165,7 +177,7 @@ public class FormService : IFormService
 
     public async Task<ItemResponse<Form>> DeleteFormByIdAsync(string id)
     {
-        var form = GetFormByIdAsync(id);
+        var form = GetFormByIdAsync(id, null);
 
         try
         {
@@ -180,7 +192,7 @@ public class FormService : IFormService
 
     public async Task<ItemResponse<Form>> UpdateFormAsync(SaveFormRequest updateFormRequest)
     {
-        var form = await GetFormByIdAsync(updateFormRequest.Id);
+        var form = await GetFormByIdAsync(updateFormRequest.Id, null);
 
         if (updateFormRequest.Name != form.Name)
         {
@@ -221,7 +233,7 @@ public class FormService : IFormService
     {
         try
         {
-            var form = await GetFormByIdAsync(shareFormRequest.FormId);
+            var form = await GetFormByIdAsync(shareFormRequest.FormId, null);
             foreach (var user in shareFormRequest.Users)
             {
                 await _userService.GetUserByIdAsync(user.Id);
@@ -254,7 +266,7 @@ public class FormService : IFormService
     {
         try
         {
-            var form = await GetFormByIdAsync(removeAccessFormRequest.Id);
+            var form = await GetFormByIdAsync(removeAccessFormRequest.Id, null);
 
             var user = await _userService.GetUserByIdAsync(removeAccessFormRequest.UserId);
 

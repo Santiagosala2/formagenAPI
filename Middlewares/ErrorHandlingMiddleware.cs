@@ -75,6 +75,12 @@ namespace FormagenAPI.Middlewares
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 }
 
+                if (ex is UnauthorizedAccessException)
+                {
+                    errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.Unauthorized;
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                }
 
 
                 if (ex is UnexpectedCosmosException)

@@ -1,6 +1,7 @@
 using DTOs.Admin;
 using Microsoft.Azure.Cosmos;
 using Models.Admin;
+using Models;
 
 namespace FormagenAPI.Services
 {
@@ -8,9 +9,9 @@ namespace FormagenAPI.Services
     {
         Task<bool> SendOTPAsync(string email);
 
-        Task<(bool, AdminSession?)> VerifyOTPAsync(string email, string otp);
+        Task<(bool, Session?)> VerifyOTPAsync(string email, string otp);
 
-        Task<AdminSession> GetSessionByIdAsync(string sessionId);
+        Task<Session> GetSessionByIdAsync(string sessionId);
 
         Task<AdminUser> CreateUserAsync(CreateAdminUserRequest user);
 
