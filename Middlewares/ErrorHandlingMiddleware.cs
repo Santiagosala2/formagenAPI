@@ -47,6 +47,13 @@ namespace FormagenAPI.Middlewares
                     context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 }
 
+                if (ex is UserSessionNotFoundException)
+                {
+                    errorResponse.Message = ex.Message;
+                    errorResponse.StatusCode = HttpStatusCode.NotFound;
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                }
+
                 if (ex is AdminSessionNotFoundException)
                 {
                     errorResponse.Message = ex.Message;

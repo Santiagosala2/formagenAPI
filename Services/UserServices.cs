@@ -91,7 +91,6 @@ public class UserService : IUserService
             };
 
             session!.OTP = otp;
-            session.Used = true;
             await CreateSessionAsync(session);
         }
         else
@@ -114,6 +113,8 @@ public class UserService : IUserService
         {
             if (session!.OTP.ToLower() == otp.ToLower())
             {
+                session.Used = true;
+                await _userSessionContainer.UpsertItemAsync<Session>(session);
                 return (true, session);
             }
         }
@@ -362,7 +363,7 @@ public class UserService : IUserService
 
             string userByEmailQuery = $@"
                    SELECT * FROM {_databaseSettings.UserSessionCollectionName} s
-                   WHERE s.email = @email and s.expiresAt > @expiresAt and s.useUntil > @useUntil and s.use = true
+                   WHERE s.email = @email and s.expiresAt > @expiresAt and s.useUntil > @useUntil and s.used = false
                    ORDER BY s.created DESC";
 
             var query = new QueryDefinition(userByEmailQuery)
