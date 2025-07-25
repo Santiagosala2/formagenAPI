@@ -1,6 +1,7 @@
 
 
 using System.ComponentModel.DataAnnotations;
+using Models.Questions;
 using Models.User;
 
 
@@ -8,14 +9,13 @@ namespace Models.Form
 {
     public class FormResponse
     {
-        [Required]
-        public string FormId { get; set; } = null!;
-        public SharedUser User { get; set; } = null!;
-        public dynamic Response { get; set; } = null!;
+        public required string Id { get; set; } = null!;
+        public required SharedUser User { get; set; } = null!;
+        public required List<BaseQuestion> Questions { get; set; } = new List<BaseQuestion>();
 
-        public DateTime Created { get; set; }
+        public required DateTime Created { get; set; }
 
-        public DateTime LastUpdated { get; set; }
+        public required DateTime LastUpdated { get; set; }
 
     }
 

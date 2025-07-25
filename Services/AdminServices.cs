@@ -15,7 +15,7 @@ namespace Services;
 
 public class AdminService : IAdminService
 {
-    private readonly Container _sessionContainer;
+    private readonly Container _adminSessionContainer;
 
     private readonly Container _adminUserContainer;
     private readonly DatabaseSettings _databaseSettings;
@@ -52,7 +52,7 @@ public class AdminService : IAdminService
 
         Database database = cosmosClient.GetDatabase(databaseSettings.Value.DatabaseName);
 
-        _sessionContainer = database.GetContainer(
+        _adminSessionContainer = database.GetContainer(
            databaseSettings.Value.AdminSessionCollectionName);
 
         _adminUserContainer = database.GetContainer(
@@ -65,36 +65,44 @@ public class AdminService : IAdminService
 
     public async Task<bool> SendOTPAsync(string email)
     {
-        var user = await GetUserByEmailAsync(email);
+        var user = await this.GetUserByEmailAsync(email);
         bool otpSent = false;
 
-        if (user is not null)
+        if (user is null)
+        {
+            // tell the user that account does not exist
+            return otpSent;
+        }
+
+        // try to send an otp that has already been created - in which ExpireDate isnt expired, Use = false and UseUntil < 5 mins
+        var usedSession = await GetUsedSessions(email);
+        string otp;
+        if (usedSession is null)
         {
             // prepare otp
-            var otp = OtpGenerator.GenerateOtp();
+            otp = OtpGenerator.GenerateOtp();
             // replace current otp
             Session session = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 OTP = otp,
                 Email = user.Email,
-                ExpiresAt = DateTime.UtcNow.AddHours(1)
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                UseUntil = DateTime.UtcNow.AddMinutes(5)
             };
 
             session!.OTP = otp;
             await CreateSessionAsync(session);
-
-            var payload = new StringContent(JsonSerializer.Serialize(new EmailServicePayload(email, otp)));
-
-            // trigger send otp service
-            await _emailClient.PostAsync(_emailServiceSettings.FlowURI, payload);
-            otpSent = true;
         }
         else
         {
-            // tell the user that account does not exist
+            otp = usedSession!.OTP;
         }
 
+        var payload = new StringContent(JsonSerializer.Serialize(new EmailServicePayload(email, otp)));
+        // trigger send otp service
+        await _emailClient.PostAsync(_emailServiceSettings.FlowURI, payload);
+        otpSent = true;
         return otpSent;
     }
 
@@ -106,6 +114,8 @@ public class AdminService : IAdminService
         {
             if (session!.OTP.ToLower() == otp.ToLower())
             {
+                session.Used = true;
+                await _adminSessionContainer.UpsertItemAsync<Session>(session);
                 return (true, session);
             }
         }
@@ -113,13 +123,13 @@ public class AdminService : IAdminService
         return (false, null);
     }
 
-    public async Task CreateSessionAsync(Session newSession) => await _sessionContainer.UpsertItemAsync<Session>(newSession);
+    public async Task CreateSessionAsync(Session newSession) => await _adminSessionContainer.UpsertItemAsync<Session>(newSession);
 
     public async Task<Session> GetSessionByIdAsync(string sessionId)
     {
         try
         {
-            var session = await _sessionContainer.ReadItemAsync<Session>(sessionId, new PartitionKey(sessionId));
+            var session = await _adminSessionContainer.ReadItemAsync<Session>(sessionId, new PartitionKey(sessionId));
             return session;
         }
         catch (CosmosException ex)
@@ -283,7 +293,7 @@ public class AdminService : IAdminService
             var query = new QueryDefinition(userByEmailQuery)
                 .WithParameter("@email", email.ToLower());
 
-            using FeedIterator<Session> feed = _sessionContainer.GetItemQueryIterator<Session>(
+            using FeedIterator<Session> feed = _adminSessionContainer.GetItemQueryIterator<Session>(
                    queryDefinition: query
                 );
 
@@ -340,7 +350,7 @@ public class AdminService : IAdminService
             {
                 try
                 {
-                    await _sessionContainer.DeleteItemAsync<ItemResponse<Session>>(session.Id, new PartitionKey(session.Id));
+                    await _adminSessionContainer.DeleteItemAsync<ItemResponse<Session>>(session.Id, new PartitionKey(session.Id));
                 }
                 catch (CosmosException ex)
                 {
@@ -354,7 +364,37 @@ public class AdminService : IAdminService
     }
 
 
+    private async Task<Session?> GetUsedSessions(string email)
+    {
+        try
+        {
+            var useUntil = DateTime.UtcNow.AddMinutes(-4.6).ToString("s", System.Globalization.CultureInfo.InvariantCulture);
+            var expiresAt = DateTime.UtcNow.AddMinutes(-40).ToString("s", System.Globalization.CultureInfo.InvariantCulture);
 
+            string userByEmailQuery = $@"
+                   SELECT * FROM {_databaseSettings.AdminSessionCollectionName} s
+                   WHERE s.email = @email and s.expiresAt > @expiresAt and s.useUntil > @useUntil and s.used = false
+                   ORDER BY s.created DESC";
+
+            var query = new QueryDefinition(userByEmailQuery)
+                .WithParameter("@email", email.ToLower())
+                .WithParameter("@expiresAt", expiresAt)
+                .WithParameter("@useUntil", useUntil);
+
+            using FeedIterator<Session> feed = _adminSessionContainer.GetItemQueryIterator<Session>(
+                   queryDefinition: query
+                );
+
+            FeedResponse<Session> response = await feed.ReadNextAsync();
+
+            return response.FirstOrDefault();
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException(ex.Message.ToString(), ex);
+        }
+
+    }
 
 
 

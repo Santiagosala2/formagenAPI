@@ -14,6 +14,8 @@ namespace Services;
 public class FormService : IFormService
 {
     private readonly Container _formsContainer;
+
+    private readonly Container _responseContainer;
     private readonly DatabaseSettings _databaseSettings;
 
     private readonly IUserService _userService;
@@ -103,7 +105,7 @@ public class FormService : IFormService
         return response.ToList().Count == 0;
     }
 
-    public async Task<Form> GetFormByIdAsync(string id, Session? session)
+    public async Task<Form> GetFormByIdAsync(string id, Session? session = null)
     {
         try
         {
@@ -177,7 +179,7 @@ public class FormService : IFormService
 
     public async Task<ItemResponse<Form>> DeleteFormByIdAsync(string id)
     {
-        var form = GetFormByIdAsync(id, null);
+        var form = GetFormByIdAsync(id);
 
         try
         {
@@ -192,7 +194,7 @@ public class FormService : IFormService
 
     public async Task<ItemResponse<Form>> UpdateFormAsync(SaveFormRequest updateFormRequest)
     {
-        var form = await GetFormByIdAsync(updateFormRequest.Id, null);
+        var form = await GetFormByIdAsync(updateFormRequest.Id);
 
         if (updateFormRequest.Name != form.Name)
         {
@@ -233,7 +235,7 @@ public class FormService : IFormService
     {
         try
         {
-            var form = await GetFormByIdAsync(shareFormRequest.FormId, null);
+            var form = await GetFormByIdAsync(shareFormRequest.Id);
             foreach (var user in shareFormRequest.Users)
             {
                 await _userService.GetUserByIdAsync(user.Id);
@@ -266,7 +268,7 @@ public class FormService : IFormService
     {
         try
         {
-            var form = await GetFormByIdAsync(removeAccessFormRequest.Id, null);
+            var form = await GetFormByIdAsync(removeAccessFormRequest.Id);
 
             var user = await _userService.GetUserByIdAsync(removeAccessFormRequest.UserId);
 
@@ -286,6 +288,30 @@ public class FormService : IFormService
 
             ItemResponse<Form> updatedform = await _formsContainer.UpsertItemAsync(updatedForm, new PartitionKey(form.Id));
             return updatedform;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
+    public async Task<bool> SubmitFormAsync(SubmitFormRequest submitFormRequest)
+    {
+        try
+        {
+            var form = await GetFormByIdAsync(submitFormRequest.Id);
+
+            var formResponse = new FormResponse
+            {
+                Id = submitFormRequest.Id,
+                User = submitFormRequest!.User,
+                Questions = submitFormRequest!.Questions,
+                Created = DateTime.UtcNow,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            ItemResponse<FormResponse> updatedform = await _responseContainer.UpsertItemAsync(formResponse, new PartitionKey(form.Id));
+            return true;
         }
         catch (CosmosException ex)
         {

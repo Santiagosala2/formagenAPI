@@ -76,4 +76,13 @@ public class FormController : ControllerBase
         return Ok(formResponse);
     }
 
+
+    [AdminAuthorizeSession]
+    [HttpPost("submit/")]
+    public async Task<IActionResult> SubmitForm(SubmitFormRequest submitFormRequest)
+    {
+        var formResponse = await _formService.SubmitFormAsync(submitFormRequest);
+        return Ok(formResponse);
+    }
+
 }
