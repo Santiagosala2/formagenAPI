@@ -23,8 +23,10 @@ public class FormService : IFormService
 
     private readonly IAdminService _adminService;
 
+    private readonly IEmailService _emailService;
+
     public FormService(
-        IOptions<DatabaseSettings> databaseSettings, IUserService userService, IAdminService adminService)
+        IOptions<DatabaseSettings> databaseSettings, IUserService userService, IAdminService adminService, IEmailService emailService)
     {
 
         CosmosClient cosmosClient = new(
@@ -44,6 +46,8 @@ public class FormService : IFormService
         );
 
         Database database = cosmosClient.GetDatabase(databaseSettings.Value.DatabaseName);
+
+        _emailService = emailService;
 
         _formsContainer = database.GetContainer(
            databaseSettings.Value.FormCollectionName);
@@ -263,6 +267,11 @@ public class FormService : IFormService
             };
 
             ItemResponse<Form> updatedform = await _formsContainer.UpsertItemAsync(updatedForm, new PartitionKey(form.Id));
+            foreach (var user in shareFormRequest.Users)
+            {
+                await _emailService.SendShareEmail(form.Id, user.Email, user.Name);
+            }
+
             return updatedform;
         }
         catch (CosmosException ex)

@@ -19,16 +19,11 @@ public class AdminService : IAdminService
 
     private readonly Container _adminUserContainer;
     private readonly DatabaseSettings _databaseSettings;
-
-    private readonly EmailServiceSettings _emailServiceSettings;
-
-    private readonly HttpClient _emailClient;
-
-    public record EmailServicePayload(string email, string otp);
+    private readonly IEmailService _emailService;
 
     public AdminService(
         IOptions<DatabaseSettings> databaseSettings,
-        IOptions<EmailServiceSettings> emailServiceSettings
+        IEmailService emailService
         )
     {
 
@@ -46,11 +41,10 @@ public class AdminService : IAdminService
 
         );
 
-        _emailClient = new HttpClient();
-        _emailServiceSettings = emailServiceSettings.Value;
-
 
         Database database = cosmosClient.GetDatabase(databaseSettings.Value.DatabaseName);
+
+        _emailService = emailService;
 
         _adminSessionContainer = database.GetContainer(
            databaseSettings.Value.AdminSessionCollectionName);
@@ -100,9 +94,7 @@ public class AdminService : IAdminService
             otp = usedSession!.OTP;
         }
 
-        var payload = new StringContent(JsonSerializer.Serialize(new EmailServicePayload(email, otp)));
-        // trigger send otp service
-        await _emailClient.PostAsync(_emailServiceSettings.FlowURI, payload);
+        await _emailService.SendOTPEmail(email, otp);
         otpSent = true;
         return otpSent;
     }

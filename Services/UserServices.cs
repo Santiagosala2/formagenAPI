@@ -17,16 +17,11 @@ public class UserService : IUserService
 
     private readonly Container _userContainer;
     private readonly DatabaseSettings _databaseSettings;
-
-    private readonly EmailServiceSettings _emailServiceSettings;
-
-    private readonly HttpClient _emailClient;
-
-    public record EmailServicePayload(string email, string otp);
+    private readonly IEmailService _emailService;
 
     public UserService(
         IOptions<DatabaseSettings> formStoreDatabaseSettings,
-        IOptions<EmailServiceSettings> emailServiceSettings
+        IEmailService emailService
         )
     {
 
@@ -44,8 +39,7 @@ public class UserService : IUserService
 
         );
 
-        _emailClient = new HttpClient();
-        _emailServiceSettings = emailServiceSettings.Value;
+        _emailService = emailService;
 
 
         Database database = cosmosClient.GetDatabase(formStoreDatabaseSettings.Value.DatabaseName);
@@ -98,9 +92,7 @@ public class UserService : IUserService
             otp = usedSession!.OTP;
         }
 
-        var payload = new StringContent(JsonSerializer.Serialize(new EmailServicePayload(email, otp)));
-        // trigger send otp service
-        await _emailClient.PostAsync(_emailServiceSettings.FlowURI, payload);
+        await _emailService.SendOTPEmail(email, otp);
         otpSent = true;
         return otpSent;
     }

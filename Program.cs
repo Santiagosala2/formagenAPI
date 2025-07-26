@@ -35,6 +35,7 @@ builder.Services.Configure<EmailServiceSettings>(
 builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddSingleton<IAdminService, AdminService>();
 builder.Services.AddSingleton<IFormService, FormService>();
+builder.Services.AddSingleton<IEmailService, EmailService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
