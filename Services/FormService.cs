@@ -8,6 +8,7 @@ using Models.Form;
 using Models;
 using MongoDB.Driver;
 using Models.User;
+using Models.Admin;
 
 namespace Services;
 
@@ -20,8 +21,10 @@ public class FormService : IFormService
 
     private readonly IUserService _userService;
 
+    private readonly IAdminService _adminService;
+
     public FormService(
-        IOptions<DatabaseSettings> databaseSettings, IUserService userService)
+        IOptions<DatabaseSettings> databaseSettings, IUserService userService, IAdminService adminService)
     {
 
         CosmosClient cosmosClient = new(
@@ -44,10 +47,14 @@ public class FormService : IFormService
 
         _formsContainer = database.GetContainer(
            databaseSettings.Value.FormCollectionName);
+        _responseContainer = database.GetContainer(
+           databaseSettings.Value.ResponseCollectionName);
 
         _databaseSettings = databaseSettings.Value;
 
         _userService = userService;
+
+        _adminService = adminService;
 
 
     }
@@ -300,17 +307,25 @@ public class FormService : IFormService
         try
         {
             var form = await GetFormByIdAsync(submitFormRequest.Id);
+            BaseUser user = submitFormRequest.User.IsAdmin ?
+                               await _adminService.GetUserByIdAsync(submitFormRequest.User.UserId) :
+                               await _userService.GetUserByIdAsync(submitFormRequest.User.UserId);
 
             var formResponse = new FormResponse
             {
-                Id = submitFormRequest.Id,
-                User = submitFormRequest!.User,
+                Id = Guid.NewGuid().ToString(),
+                FormId = form.Id,
+                User = new SharedUser()
+                {
+                    Email = user.Email,
+                    Id = user.Id,
+                    Name = user.Name
+                },
                 Questions = submitFormRequest!.Questions,
-                Created = DateTime.UtcNow,
-                LastUpdated = DateTime.UtcNow
+                Created = DateTime.UtcNow
             };
 
-            ItemResponse<FormResponse> updatedform = await _responseContainer.UpsertItemAsync(formResponse, new PartitionKey(form.Id));
+            ItemResponse<FormResponse> submitform = await _responseContainer.CreateItemAsync(formResponse);
             return true;
         }
         catch (CosmosException ex)

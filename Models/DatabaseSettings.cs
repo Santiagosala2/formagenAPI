@@ -15,4 +15,6 @@ public class DatabaseSettings
     public string UserSessionCollectionName { get; set; } = null!;
 
     public string UserCollectionName { get; set; } = null!;
+
+    public string ResponseCollectionName { get; set; } = null!;
 }

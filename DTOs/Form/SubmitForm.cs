@@ -2,7 +2,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using Models.Questions;
-using Models.User;
+using Models;
+using DTOs.Admin;
 
 
 namespace DTOs.Form
@@ -14,13 +15,10 @@ namespace DTOs.Form
         public string Id { get; set; } = null!;
 
         [Required]
-        public SharedUser User { get; set; } = null!;
+        public SessionResponse User { get; set; } = null!;
 
         [Required]
         public List<BaseQuestion> Questions { get; set; } = new List<BaseQuestion>();
-        public DateTime Created { get; set; }
-
-        public DateTime LastUpdated { get; set; }
 
     }
 

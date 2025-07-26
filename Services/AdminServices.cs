@@ -88,7 +88,8 @@ public class AdminService : IAdminService
                 OTP = otp,
                 Email = user.Email,
                 ExpiresAt = DateTime.UtcNow.AddHours(1),
-                UseUntil = DateTime.UtcNow.AddMinutes(5)
+                UseUntil = DateTime.UtcNow.AddMinutes(5),
+                UserId = user.Id
             };
 
             session!.OTP = otp;

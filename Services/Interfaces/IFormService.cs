@@ -21,6 +21,8 @@ namespace FormagenAPI.Services
 
         Task<ItemResponse<Form>> RemoveAccessFormAsync(RemoveAccessFormRequest removeAccessFormRequest);
 
+        Task<bool> SubmitFormAsync(SubmitFormRequest submitFormRequest);
+
 
     }
 }

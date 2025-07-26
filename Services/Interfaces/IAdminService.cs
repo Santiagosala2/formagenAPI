@@ -15,6 +15,8 @@ namespace FormagenAPI.Services
 
         Task<AdminUser> CreateUserAsync(CreateAdminUserRequest user);
 
+        Task<AdminUser> GetUserByIdAsync(string id);
+
         Task<List<AdminUser>> GetUsersAsync();
 
         Task<bool> DeleteUserAsync(string userId);

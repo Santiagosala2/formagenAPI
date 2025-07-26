@@ -1,6 +1,8 @@
 using DTOs.User;
 using Microsoft.Azure.Cosmos;
 using Models;
+using User = Models.User.User;
+
 
 namespace FormagenAPI.Services
 {
@@ -12,14 +14,14 @@ namespace FormagenAPI.Services
 
         Task<Session> GetSessionByIdAsync(string sessionId);
 
-        Task<Models.User.User> GetUserByIdAsync(string id);
+        Task<User> GetUserByIdAsync(string id);
 
-        Task<Models.User.User> CreateUserAsync(CreateUser user);
+        Task<User> CreateUserAsync(CreateUser user);
 
-        Task<List<Models.User.User>> GetUsersAsync();
+        Task<List<User>> GetUsersAsync();
 
         Task<bool> DeleteUserAsync(string userId);
 
-        Task<ItemResponse<Models.User.User>> UpdateUserAsync(UpdateUser updateRequest);
+        Task<ItemResponse<User>> UpdateUserAsync(UpdateUser updateRequest);
     }
 }

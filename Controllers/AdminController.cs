@@ -51,6 +51,7 @@ public class AdminController : ControllerBase
         var session = HttpContext.Items["Session"] as Session;
         AdminSessionResponse adminSessionResponse = new()
         {
+            UserId = session!.UserId,
             Email = session!.Email
         };
         return Ok(adminSessionResponse);

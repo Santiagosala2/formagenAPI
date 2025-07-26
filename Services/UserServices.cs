@@ -1,14 +1,13 @@
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using Microsoft.Azure.Cosmos;
 using Models;
 using Helpers;
-using System.Text.Json.Serialization;
 using System.Text.Json;
 using FormagenAPI.Services;
 using System.Net;
 using FormagenAPI.Exceptions;
 using DTOs.User;
+using Microsoft.Azure.Cosmos;
+using User = Models.User.User;
 
 namespace Services;
 
@@ -87,7 +86,8 @@ public class UserService : IUserService
                 OTP = otp,
                 Email = user.Email,
                 ExpiresAt = DateTime.UtcNow.AddHours(1),
-                UseUntil = DateTime.UtcNow.AddMinutes(5)
+                UseUntil = DateTime.UtcNow.AddMinutes(5),
+                UserId = user.Id
             };
 
             session!.OTP = otp;
@@ -144,18 +144,18 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<Models.User.User> CreateUserAsync(CreateUser userRequest)
+    public async Task<User> CreateUserAsync(CreateUser userRequest)
     {
         var userExists = await GetUserByEmailAsync(userRequest.Email);
 
         if (userExists is not null)
         {
-            throw new UserEmailNotUniqueException("Models.User.User email is not unique");
+            throw new UserEmailNotUniqueException("User email is not unique");
         }
 
         try
         {
-            Models.User.User user = new()
+            User user = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = userRequest.Name,
@@ -174,19 +174,19 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<ItemResponse<Models.User.User>> UpdateUserAsync(UpdateUser updateRequest)
+    public async Task<ItemResponse<User>> UpdateUserAsync(UpdateUser updateRequest)
     {
         try
         {
             var user = await GetUserByIdAsync(updateRequest.Id);
-            var updatedUser = new Models.User.User()
+            var updatedUser = new User()
             {
                 Id = user.Id,
                 Name = updateRequest.Name,
                 Email = user.Email,
                 LastUpdated = DateTime.UtcNow
             };
-            var response = await _userContainer.UpsertItemAsync<Models.User.User>(updatedUser, new PartitionKey(user.Id));
+            var response = await _userContainer.UpsertItemAsync<User>(updatedUser, new PartitionKey(user.Id));
             return response;
         }
         catch (CosmosException ex)
@@ -195,11 +195,11 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<Models.User.User> GetUserByIdAsync(string id)
+    public async Task<User> GetUserByIdAsync(string id)
     {
         try
         {
-            var user = await _userContainer.ReadItemAsync<Models.User.User>(
+            var user = await _userContainer.ReadItemAsync<User>(
                   id: id,
                   partitionKey: new PartitionKey(id)
             );
@@ -232,7 +232,7 @@ public class UserService : IUserService
             {
                 // throw new UserSessionsCouldNotDeleteException("Could not delete admin user sessions");
             }
-            var deleteUserResponse = await _userContainer.DeleteItemAsync<ItemResponse<Models.User.User>>(user.Id, new PartitionKey(user.Id));
+            var deleteUserResponse = await _userContainer.DeleteItemAsync<ItemResponse<User>>(user.Id, new PartitionKey(user.Id));
             return true;
 
         }
@@ -244,23 +244,23 @@ public class UserService : IUserService
     }
 
 
-    public async Task<List<Models.User.User>> GetUsersAsync()
+    public async Task<List<User>> GetUsersAsync()
     {
         try
         {
             string getAllUsersQuery = $"SELECT * FROM {_databaseSettings.UserCollectionName}";
 
-            var query = new QueryDefinition(getAllUsersQuery);
+            var query = new Microsoft.Azure.Cosmos.QueryDefinition(getAllUsersQuery);
 
-            using FeedIterator<Models.User.User> feed = _userContainer.GetItemQueryIterator<Models.User.User>(
+            using Microsoft.Azure.Cosmos.FeedIterator<User> feed = _userContainer.GetItemQueryIterator<User>(
                queryDefinition: query
             );
 
-            List<Models.User.User> users = new();
+            List<User> users = new();
             while (feed.HasMoreResults)
             {
-                FeedResponse<Models.User.User> response = await feed.ReadNextAsync();
-                foreach (Models.User.User user in response)
+                Microsoft.Azure.Cosmos.FeedResponse<User> response = await feed.ReadNextAsync();
+                foreach (User user in response)
                 {
                     users.Add(user);
                 }
@@ -306,7 +306,7 @@ public class UserService : IUserService
     }
 
 
-    private async Task<Models.User.User?> GetUserByEmailAsync(string email)
+    private async Task<User?> GetUserByEmailAsync(string email)
     {
         try
         {
@@ -315,11 +315,11 @@ public class UserService : IUserService
             var query = new QueryDefinition(userByEmailQuery)
                 .WithParameter("@email", email.ToLower());
 
-            using FeedIterator<Models.User.User> feed = _userContainer.GetItemQueryIterator<Models.User.User>(
+            using FeedIterator<User> feed = _userContainer.GetItemQueryIterator<User>(
                    queryDefinition: query
                 );
 
-            FeedResponse<Models.User.User> response = await feed.ReadNextAsync();
+            FeedResponse<User> response = await feed.ReadNextAsync();
 
             return response.FirstOrDefault();
         }

@@ -10,6 +10,10 @@ namespace Models
         public string Id { get; set; } = null!;
         [Required]
         public string Email { get; set; } = null!;
+
+        [Required]
+        public string UserId { get; set; } = null!;
+
         public string OTP { get; set; } = null!;
 
         public bool Used { get; set; } = false;
