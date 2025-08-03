@@ -10,6 +10,8 @@ namespace Models.Form
     public class FormResponse
     {
         public required string Id { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
 
         public required string FormId { get; set; }
         public required SharedUser User { get; set; }

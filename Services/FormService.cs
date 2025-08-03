@@ -324,6 +324,8 @@ public class FormService : IFormService
             {
                 Id = Guid.NewGuid().ToString(),
                 FormId = form.Id,
+                Title = submitFormRequest?.Title,
+                Description = submitFormRequest?.Description,
                 User = new SharedUser()
                 {
                     Email = user.Email,
@@ -347,12 +349,12 @@ public class FormService : IFormService
     {
         try
         {
-            string getAllUsersQuery = $"SELECT * FROM {_databaseSettings.FormCollectionName} WHERE f.formId = @formId";
+            string getAllFormResponsesQuery = $"SELECT * FROM {_databaseSettings.ResponseCollectionName} f WHERE f.formId = @formId";
 
-            var query = new QueryDefinition(getAllUsersQuery)
+            var query = new QueryDefinition(getAllFormResponsesQuery)
                             .WithParameter("@formId", formId);
 
-            using FeedIterator<FormResponse> feed = _formsContainer.GetItemQueryIterator<FormResponse>(
+            using FeedIterator<FormResponse> feed = _responseContainer.GetItemQueryIterator<FormResponse>(
                queryDefinition: query
             );
 
@@ -370,6 +372,7 @@ public class FormService : IFormService
         }
         catch (CosmosException ex)
         {
+            Console.WriteLine(ex.Message);
             throw new UnexpectedCosmosException("Cosmos Exception", ex);
         }
     }

@@ -86,8 +86,8 @@ public class FormController : ControllerBase
     }
 
     [AdminAuthorizeSession]
-    [HttpPost("{id}/response")]
-    public async Task<IActionResult> GetFormResponse(string id)
+    [HttpGet("{id}/responses")]
+    public async Task<IActionResult> GetFormResponses(string id)
     {
         var formResponse = await _formService.GetFormResponsesAsync(id);
         return Ok(formResponse);
