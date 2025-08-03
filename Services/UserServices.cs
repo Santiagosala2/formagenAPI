@@ -242,16 +242,16 @@ public class UserService : IUserService
         {
             string getAllUsersQuery = $"SELECT * FROM {_databaseSettings.UserCollectionName}";
 
-            var query = new Microsoft.Azure.Cosmos.QueryDefinition(getAllUsersQuery);
+            var query = new QueryDefinition(getAllUsersQuery);
 
-            using Microsoft.Azure.Cosmos.FeedIterator<User> feed = _userContainer.GetItemQueryIterator<User>(
+            using FeedIterator<User> feed = _userContainer.GetItemQueryIterator<User>(
                queryDefinition: query
             );
 
             List<User> users = new();
             while (feed.HasMoreResults)
             {
-                Microsoft.Azure.Cosmos.FeedResponse<User> response = await feed.ReadNextAsync();
+                FeedResponse<User> response = await feed.ReadNextAsync();
                 foreach (User user in response)
                 {
                     users.Add(user);

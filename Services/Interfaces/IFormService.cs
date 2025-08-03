@@ -8,20 +8,14 @@ namespace FormagenAPI.Services
     public interface IFormService
     {
         Task<Form> GetFormByIdAsync(string id, Session? session);
-
         Task<List<Form>> GetFormsAsync();
-
         Task<CreateFormResponse> CreateFormAsync(CreateFormRequest createFormRequest);
-
         Task<ItemResponse<Form>> UpdateFormAsync(SaveFormRequest updateFormRequest);
-
         Task<ItemResponse<Form>> DeleteFormByIdAsync(string id);
-
         Task<ItemResponse<Form>> ShareFormAsync(ShareFormRequest shareFormRequest);
-
         Task<ItemResponse<Form>> RemoveAccessFormAsync(RemoveAccessFormRequest removeAccessFormRequest);
-
         Task<bool> SubmitFormAsync(SubmitFormRequest submitFormRequest);
+        Task<List<FormResponse>> GetFormResponsesAsync(string formId);
 
 
     }

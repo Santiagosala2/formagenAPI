@@ -343,4 +343,35 @@ public class FormService : IFormService
         }
     }
 
+    public async Task<List<FormResponse>> GetFormResponsesAsync(string formId)
+    {
+        try
+        {
+            string getAllUsersQuery = $"SELECT * FROM {_databaseSettings.FormCollectionName} WHERE f.formId = @formId";
+
+            var query = new QueryDefinition(getAllUsersQuery)
+                            .WithParameter("@formId", formId);
+
+            using FeedIterator<FormResponse> feed = _formsContainer.GetItemQueryIterator<FormResponse>(
+               queryDefinition: query
+            );
+
+            List<FormResponse> formResponses = new();
+            while (feed.HasMoreResults)
+            {
+                FeedResponse<FormResponse> response = await feed.ReadNextAsync();
+                foreach (FormResponse formResponse in response)
+                {
+                    formResponses.Add(formResponse);
+                }
+            }
+
+            return formResponses;
+        }
+        catch (CosmosException ex)
+        {
+            throw new UnexpectedCosmosException("Cosmos Exception", ex);
+        }
+    }
+
 }
