@@ -21,6 +21,7 @@ namespace Models
 
         public DateTime ExpiresAt { get; set; }
         public bool IsAdmin { get; set; }
+        public int Ttl { get; set; }
     }
 
 }
