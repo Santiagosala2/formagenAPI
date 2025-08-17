@@ -10,6 +10,7 @@ namespace Models.Questions
     [JsonDerivedType(typeof(DateQuestion), typeDiscriminator: "Date")]
     [JsonDerivedType(typeof(CheckboxQuestion), typeDiscriminator: "Checkbox")]
     [JsonDerivedType(typeof(RadioQuestion), typeDiscriminator: "Radio")]
+    [JsonDerivedType(typeof(SignatureQuestion), typeDiscriminator: "Signature")]
     public class BaseQuestion
     {
         [Required]
@@ -67,5 +68,13 @@ namespace Models.Questions
         public List<string> Items { get; set; } = null!;
 
     }
+
+    public class SignatureQuestion : BaseQuestion
+    {
+        public string? DefaultValue { get; set; }
+        public string Type = "Signature";
+
+    }
+
 
 }
