@@ -5,6 +5,7 @@ using Services;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
+string frontEndUrl = builder.Configuration.GetValue<string>("FrontEndUrl") ?? "https://localhost:3000";
 
 // Add services to the container.
 builder.Services.AddCors(options =>
@@ -12,7 +13,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("https://localhost:3000")
+                          policy.WithOrigins(frontEndUrl)
                                 .AllowCredentials()
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
