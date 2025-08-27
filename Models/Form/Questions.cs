@@ -5,6 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace Models.Questions
 {
+    public record ChoiceItem(string id, string item);
+
     [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
     [JsonDerivedType(typeof(TextQuestion), typeDiscriminator: "Text")]
     [JsonDerivedType(typeof(DateQuestion), typeDiscriminator: "Date")]
@@ -53,7 +55,7 @@ namespace Models.Questions
     {
         public dynamic? DefaultValue { get; set; }
         public string Type = "Checkbox";
-        public List<string>? Items { get; set; } = null!;
+        public List<ChoiceItem>? Items { get; set; } = null!;
 
         public bool? Multi { get; set; }
 
@@ -65,7 +67,7 @@ namespace Models.Questions
         public string? DefaultValue { get; set; }
         public string Type = "Radio";
 
-        public List<string> Items { get; set; } = null!;
+        public List<ChoiceItem> Items { get; set; } = null!;
 
     }
 
