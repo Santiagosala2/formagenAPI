@@ -77,7 +77,7 @@ public class FormController : ControllerBase
     }
 
 
-    [AdminAuthorizeSession]
+    [AuthorizeSession]
     [HttpPost("submit/")]
     public async Task<IActionResult> SubmitForm(SubmitFormRequest submitFormRequest)
     {
