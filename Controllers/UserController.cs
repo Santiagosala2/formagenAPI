@@ -51,6 +51,7 @@ public class UserController : ControllerBase
         var session = HttpContext.Items["Session"] as Session;
         UserSessionResponse userSessionResponse = new()
         {
+            UserId = session!.UserId,
             Email = session!.Email
         };
         return Ok(userSessionResponse);
